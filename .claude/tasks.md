@@ -7,46 +7,18 @@
 
 ### P0 — Must do now
 
-- [ ] Implement Android NetworkModule (Hilt DI for Retrofit/OkHttp) `[S]` #frontend #setup
-- [ ] Implement Android AuthInterceptor (JWT header injection) `[S]` #frontend #setup
-- [ ] Build File Browser screen (GitHub file tree + navigation) `[L]` #frontend
-  - [ ] FileNode model + FileTreeParser implementation
-  - [ ] FileBrowserViewModel with GitHub API integration
-  - [ ] FileBrowserScreen composable (tree view, folder expand/collapse)
-  - [ ] FileViewerScreen composable (markdown rendering, syntax highlight)
-- [ ] Build Skills Grid screen (list skills by category/persona) `[M]` #frontend
-  - [ ] SkillGridViewModel (load YAML skills, filter by category)
-  - [ ] SkillGridScreen composable (grid cards with icons)
-  - [ ] SkillDispatchScreen composable (dynamic form from skill inputs)
-- [ ] Build Task Dispatch flow `[L]` #frontend #backend
-  - [ ] AdHocDispatchScreen composable (free-form prompt + file picker)
-  - [ ] TaskRepository implementation (backend API calls)
-  - [ ] Wire dispatch → backend → GitHub pending/ flow end-to-end
-- [ ] Build Output Review screens `[L]` #frontend
-  - [ ] TaskStatusScreen composable (polling, status badges)
-  - [ ] TaskReviewScreen composable (markdown output, approve/reject/redirect)
-  - [ ] Diff renderer for file changes
 - [ ] Build Quick Capture (voice dispatch) `[M]` #frontend
   - [ ] VoiceCaptureManager implementation (AudioRecord)
   - [ ] TranscriptionService (Gemini Flash proxy)
   - [ ] Voice UI (record button, waveform, transcription preview)
-- [ ] Build Onboarding flow `[M]` #frontend
-  - [ ] PersonaSelectScreen (Builder vs Operator)
-  - [ ] BuilderSetupScreen (GitHub OAuth, repo select, backend URL)
-  - [ ] OperatorSetupScreen (simplified, no GitHub needed)
 
 ### P1 — Should do this week
 
 - [ ] Implement backend FCM sender (Firebase Admin SDK) `[M]` #backend
 - [ ] Implement backend voice transcription proxy (Gemini Flash) `[M]` #backend
 - [ ] Complete TaskRunner variable interpolation + context file merging `[M]` #backend
-- [ ] Build Settings screen (tokens, backend URL, persona switch) `[M]` #frontend
-- [ ] Build ProjectList + ProjectHome screens `[M]` #frontend
-  - [ ] ProjectListViewModel (fetch repos from GitHub)
-  - [ ] ProjectListScreen composable (repo cards)
-  - [ ] ProjectHomeScreen composable (recent tasks, quick actions)
-- [ ] Implement DataStoreModule for local preferences `[S]` #frontend #setup
 - [ ] FCM notification handling — tap-to-navigate to task review `[M]` #frontend
+- [ ] Diff renderer for file changes in task review `[S]` #frontend
 
 ### P2 — Nice to have
 
@@ -64,6 +36,17 @@
 
 ## Completed (recent)
 
+- [x] Wire all screens into NavGraph + fix DI bindings ✅ 2026-03-20
+- [x] Build Onboarding flow (PersonaSelect, BuilderSetup, OperatorSetup) ✅ 2026-03-20
+- [x] Build Settings screen (persona, GitHub status, dark mode, logout) ✅ 2026-03-20
+- [x] Build ProjectList + ProjectHome screens ✅ 2026-03-20
+- [x] Build Output Review screens (TaskReviewScreen, approve/redirect/discard) ✅ 2026-03-20
+- [x] Build Task Dispatch flow (AdHocDispatch + TaskStatus with polling) ✅ 2026-03-20
+- [x] Build Skills Grid screen (grid + category filters + dispatch form) ✅ 2026-03-20
+- [x] Build File Browser screen (tree view + file viewer with markdown) ✅ 2026-03-20
+- [x] Implement DataStoreModule for local preferences ✅ 2026-03-20
+- [x] Implement Android NetworkModule (Hilt DI for Retrofit/OkHttp) ✅ 2026-03-20
+- [x] Implement Android AuthInterceptor (JWT header injection) ✅ 2026-03-20
 - [x] Write PRD and TDD documents ✅ 2026-03-20
 - [x] Create skill YAML schema v1 + 10 starter skill packs ✅ 2026-03-20
 - [x] Scaffold backend (Fastify + SQLite + routes + middleware) ✅ 2026-03-20

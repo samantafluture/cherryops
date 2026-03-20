@@ -10,10 +10,10 @@ import com.cherryops.app.data.model.Task
 import com.cherryops.app.data.model.TaskEntity
 import com.cherryops.app.data.model.TaskOutput
 import com.cherryops.app.data.model.TaskStatus
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,7 +21,7 @@ import javax.inject.Singleton
 class TaskRepository @Inject constructor(
     private val api: BackendApiService,
     private val taskDao: TaskDao,
-    private val json: Json
+    private val gson: Gson
 ) {
 
     suspend fun dispatchTask(
@@ -161,8 +161,8 @@ class TaskRepository @Inject constructor(
             projectId = response.projectId,
             skillId = response.skillId,
             status = response.status,
-            inputsJson = json.encodeToString(response.inputs),
-            outputJson = response.output?.let { json.encodeToString(it) },
+            inputsJson = gson.toJson(response.inputs),
+            outputJson = response.output?.let { gson.toJson(it) },
             createdAt = response.createdAt,
             updatedAt = response.updatedAt
         )
@@ -187,20 +187,25 @@ class TaskRepository @Inject constructor(
         logs = logs
     )
 
-    private fun TaskEntity.toDomain(): Task = Task(
-        id = id,
-        projectId = projectId,
-        skillId = skillId,
-        status = TaskStatus.fromValue(status),
-        inputs = outputJson?.let {
-            runCatching { json.decodeFromString<Map<String, String>>(inputsJson) }.getOrDefault(emptyMap())
-        } ?: emptyMap(),
-        output = outputJson?.let {
-            runCatching { json.decodeFromString<TaskOutputResponse>(it) }.getOrNull()?.toDomain()
-        },
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
+    private fun TaskEntity.toDomain(): Task {
+        val mapType = object : TypeToken<Map<String, String>>() {}.type
+        return Task(
+            id = id,
+            projectId = projectId,
+            skillId = skillId,
+            status = TaskStatus.fromValue(status),
+            inputs = runCatching {
+                gson.fromJson<Map<String, String>>(inputsJson, mapType)
+            }.getOrDefault(emptyMap()),
+            output = outputJson?.let {
+                runCatching {
+                    gson.fromJson(it, TaskOutputResponse::class.java)
+                }.getOrNull()?.toDomain()
+            },
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
 }
 
 class ApiException(val code: Int, override val message: String) : Exception(message)

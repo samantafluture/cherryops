@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,6 +44,10 @@ object DataStoreModule {
     @Singleton
     fun provideTaskDao(database: CherryOpsDatabase): TaskDao =
         database.taskDao()
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson = Gson()
 }
 
 object PreferencesKeys {

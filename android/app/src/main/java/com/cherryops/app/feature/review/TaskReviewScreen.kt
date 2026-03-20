@@ -144,6 +144,27 @@ fun TaskReviewScreen(
                         }
                     }
 
+                    // Diff view (from logs field)
+                    task.output?.logs?.let { logs ->
+                        if (logs.contains("@@") || logs.contains("diff --git")) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("Changes", style = MaterialTheme.typography.titleSmall)
+                                    Spacer(Modifier.height(8.dp))
+                                    DiffRenderer(
+                                        diffText = logs,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // PR link
                     task.output?.prUrl?.let { prUrl ->
                         Card(

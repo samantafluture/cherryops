@@ -19,7 +19,7 @@ interface GitHubUser {
   avatar_url: string;
 }
 
-export function createAuthRoutes(jwtSecret: string) {
+export function createAuthRoutes() {
   return async function authRoutes(app: FastifyInstance): Promise<void> {
     // Exchange GitHub OAuth code for token
     app.post<{ Body: GitHubOAuthCallbackBody }>(

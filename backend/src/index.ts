@@ -29,8 +29,8 @@ declare module "fastify" {
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { sub: string };
-    user: { sub: string };
+    payload: { sub: string; github_id?: number; type?: string };
+    user: { sub: string; github_id?: number; type?: string };
   }
 }
 
@@ -72,7 +72,7 @@ async function start(): Promise<void> {
   // Register routes under /api/v1 prefix
   await app.register(
     async (api) => {
-      await api.register(createAuthRoutes(config.jwtSecret));
+      await api.register(createAuthRoutes());
       await api.register(healthRoutes);
       await api.register(createTaskRoutes(taskQueue, repoManager));
       await api.register(skillRoutes);

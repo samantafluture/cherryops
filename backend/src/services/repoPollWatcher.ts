@@ -1,4 +1,3 @@
-import type { Database } from "better-sqlite3";
 import { getDatabase } from "../db/connection.js";
 import { getTaskByFilePath } from "../db/tasks.js";
 import type { RepoManager } from "./repoManager.js";

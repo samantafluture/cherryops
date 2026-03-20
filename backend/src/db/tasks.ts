@@ -102,8 +102,7 @@ export function getTaskByFilePath(
 }
 
 export function getFailedTasks(
-  db: Database,
-  maxRetries: number = 3
+  db: Database
 ): TaskRecord[] {
   const stmt = db.prepare(
     "SELECT * FROM tasks WHERE status = 'error' ORDER BY completed_at DESC"

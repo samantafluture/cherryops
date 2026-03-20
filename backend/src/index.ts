@@ -11,6 +11,7 @@ import { createTaskRoutes } from "./routes/tasks.js";
 import { skillRoutes } from "./routes/skills.js";
 import { createVoiceRoutes } from "./routes/voice.js";
 import { deviceRoutes } from "./routes/device.js";
+import { createAuthRoutes } from "./routes/auth.js";
 import { getDatabase, closeDatabase } from "./db/connection.js";
 import { RepoManager } from "./services/repoManager.js";
 import { TaskRunner } from "./services/taskRunner.js";
@@ -18,6 +19,7 @@ import { TaskQueue } from "./services/taskQueue.js";
 import { FcmSender } from "./services/fcmSender.js";
 import { GeminiProxy } from "./services/geminiProxy.js";
 import { FrontmatterParser } from "./services/frontmatterParser.js";
+import { RepoPollWatcher } from "./services/repoPollWatcher.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -64,9 +66,13 @@ async function start(): Promise<void> {
   const taskRunner = new TaskRunner(config, repoManager, fcmSender, frontmatterParser);
   const taskQueue = new TaskQueue(taskRunner);
 
+  // Initialize repo poll watcher for auto-execution of pending tasks
+  const repoPollWatcher = new RepoPollWatcher(repoManager, taskQueue);
+
   // Register routes under /api/v1 prefix
   await app.register(
     async (api) => {
+      await api.register(createAuthRoutes(config.jwtSecret));
       await api.register(healthRoutes);
       await api.register(createTaskRoutes(taskQueue, repoManager));
       await api.register(skillRoutes);
@@ -79,6 +85,7 @@ async function start(): Promise<void> {
   // Graceful shutdown
   const shutdown = async (): Promise<void> => {
     app.log.info("Shutting down...");
+    repoPollWatcher.stop();
     closeDatabase();
     await app.close();
     process.exit(0);

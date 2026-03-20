@@ -93,6 +93,24 @@ export function getRunningTaskCountByRepo(
   return result.count;
 }
 
+export function getTaskByFilePath(
+  db: Database,
+  filePath: string
+): TaskRecord | undefined {
+  const stmt = db.prepare("SELECT * FROM tasks WHERE task_file_path = ? LIMIT 1");
+  return stmt.get(filePath) as TaskRecord | undefined;
+}
+
+export function getFailedTasks(
+  db: Database,
+  maxRetries: number = 3
+): TaskRecord[] {
+  const stmt = db.prepare(
+    "SELECT * FROM tasks WHERE status = 'error' ORDER BY completed_at DESC"
+  );
+  return stmt.all() as TaskRecord[];
+}
+
 export function getNextQueuedTask(
   db: Database,
   repo: string

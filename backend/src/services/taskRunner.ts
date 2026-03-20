@@ -172,10 +172,49 @@ export class TaskRunner {
   private buildPrompt(taskData: TaskFileData): string {
     let prompt = taskData.brief;
 
+    // Interpolate variables into the prompt
+    if (taskData.variables) {
+      for (const [key, value] of Object.entries(taskData.variables)) {
+        prompt = prompt.replaceAll(`{{${key}}}`, value);
+      }
+    }
+
+    // Built-in template variables
+    prompt = prompt.replaceAll("{{date}}", new Date().toISOString().slice(0, 10));
+    prompt = prompt.replaceAll("{{project_name}}", taskData.id);
+
     if (taskData.context) {
       prompt += `\n\n---\n\nContext:\n${taskData.context}`;
     }
 
     return prompt;
+  }
+
+  async mergeContextFiles(
+    repo: string,
+    branch: string,
+    contextPaths: string[],
+    variables?: Record<string, string>
+  ): Promise<string> {
+    const contextParts: string[] = [];
+
+    for (const rawPath of contextPaths) {
+      let resolvedPath = rawPath;
+      // Interpolate variables in context file paths
+      if (variables) {
+        for (const [key, value] of Object.entries(variables)) {
+          resolvedPath = resolvedPath.replaceAll(`{{${key}}}`, value);
+        }
+      }
+
+      try {
+        const file = await this.repoManager.getFileContent(repo, resolvedPath, branch);
+        contextParts.push(`## ${resolvedPath}\n\n${file.content}`);
+      } catch {
+        contextParts.push(`## ${resolvedPath}\n\n[File not found]`);
+      }
+    }
+
+    return contextParts.join("\n\n---\n\n");
   }
 }

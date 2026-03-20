@@ -9,6 +9,41 @@ import type { AppConfig } from "../types.js";
 
 const execAsync = promisify(exec);
 
+const MAX_RETRIES = 3;
+const RETRY_DELAYS_MS = [2_000, 5_000, 15_000];
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxRetries: number = MAX_RETRIES
+): Promise<T> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const isTransient =
+        lastError.message.includes("ECONNRESET") ||
+        lastError.message.includes("ETIMEDOUT") ||
+        lastError.message.includes("429") ||
+        lastError.message.includes("502") ||
+        lastError.message.includes("503");
+
+      if (!isTransient || attempt >= maxRetries) {
+        throw lastError;
+      }
+
+      const delay = RETRY_DELAYS_MS[attempt] ?? 15_000;
+      console.warn(
+        `[TaskRunner] ${label} attempt ${attempt + 1} failed, retrying in ${delay}ms: ${lastError.message}`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError!;
+}
+
 interface TaskFileData {
   id: string;
   type: string;
@@ -40,41 +75,55 @@ export class TaskRunner {
     });
 
     try {
-      const fileData = await this.readTaskFile(repo, branch, taskFilePath);
+      const fileData = await withRetry(
+        () => this.readTaskFile(repo, branch, taskFilePath),
+        `readTaskFile(${taskFilePath})`
+      );
 
       let output: string;
       if (fileData.agent_mode === "cherry_agent") {
-        output = await this.runCherryAgent(fileData);
+        output = await withRetry(
+          () => this.runCherryAgent(fileData),
+          `runCherryAgent(${taskId})`
+        );
       } else {
-        output = await this.runApiDirect(fileData);
+        output = await withRetry(
+          () => this.runApiDirect(fileData),
+          `runApiDirect(${taskId})`
+        );
       }
 
-      const { commitSha } = await this.repoManager.createOrUpdateFile(
-        repo,
-        fileData.output_file,
-        output,
-        `[cherryops] Task ${taskId} output`,
-        branch
+      const { commitSha } = await withRetry(
+        () => this.repoManager.createOrUpdateFile(
+          repo,
+          fileData.output_file,
+          output,
+          `[cherryops] Task ${taskId} output`,
+          branch
+        ),
+        `writeOutput(${taskId})`
       );
 
       // Update task frontmatter to complete
-      const taskFile = await this.repoManager.getFileContent(
-        repo,
-        taskFilePath,
-        branch
+      const taskFile = await withRetry(
+        () => this.repoManager.getFileContent(repo, taskFilePath, branch),
+        `readTaskFile(${taskId})`
       );
       const updatedContent = this.frontmatterParser.updateField(
         taskFile.content,
         "status",
         "complete"
       );
-      await this.repoManager.createOrUpdateFile(
-        repo,
-        taskFilePath,
-        updatedContent,
-        `[cherryops] Task ${taskId} complete`,
-        branch,
-        taskFile.sha
+      await withRetry(
+        () => this.repoManager.createOrUpdateFile(
+          repo,
+          taskFilePath,
+          updatedContent,
+          `[cherryops] Task ${taskId} complete`,
+          branch,
+          taskFile.sha
+        ),
+        `updateTaskStatus(${taskId})`
       );
 
       updateTaskStatus(db, taskId, "complete", {

@@ -38,12 +38,19 @@ object DataStoreModule {
             context,
             CherryOpsDatabase::class.java,
             CherryOpsDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
     @Singleton
     fun provideTaskDao(database: CherryOpsDatabase): TaskDao =
         database.taskDao()
+
+    @Provides
+    @Singleton
+    fun provideCachedFileDao(database: CherryOpsDatabase): CachedFileDao =
+        database.cachedFileDao()
 
     @Provides
     @Singleton

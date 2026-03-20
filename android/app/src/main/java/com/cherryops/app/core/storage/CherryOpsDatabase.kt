@@ -5,13 +5,15 @@ import androidx.room.RoomDatabase
 import com.cherryops.app.data.model.TaskEntity
 
 @Database(
-    entities = [TaskEntity::class],
-    version = 1,
+    entities = [TaskEntity::class, CachedFileEntity::class],
+    version = 2,
     exportSchema = true
 )
 abstract class CherryOpsDatabase : RoomDatabase() {
 
     abstract fun taskDao(): TaskDao
+
+    abstract fun cachedFileDao(): CachedFileDao
 
     companion object {
         const val DATABASE_NAME = "cherryops_db"

@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cherryops.app.feature.dispatch.AdHocDispatchScreen
+import com.cherryops.app.feature.dispatch.VoiceCaptureScreen
 import com.cherryops.app.feature.dispatch.TaskStatusScreen
 import com.cherryops.app.feature.files.FileBrowserScreen
 import com.cherryops.app.feature.files.FileViewerScreen
@@ -25,8 +26,18 @@ import java.net.URLEncoder
 
 @Composable
 fun CherryOpsNavGraph(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    deepLinkRoute: String? = null
 ) {
+    // Handle deep link from FCM notifications
+    androidx.compose.runtime.LaunchedEffect(deepLinkRoute) {
+        deepLinkRoute?.let { route ->
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.PersonaSelect.route
@@ -95,6 +106,11 @@ fun CherryOpsNavGraph(
                 onDispatch = {
                     navController.navigate(
                         Screen.AdHocDispatch.createRoute(URLEncoder.encode(projectId, "UTF-8"))
+                    )
+                },
+                onVoiceCapture = {
+                    navController.navigate(
+                        Screen.VoiceCapture.createRoute(URLEncoder.encode(projectId, "UTF-8"))
                     )
                 },
                 onTaskClick = { taskId ->
@@ -184,6 +200,26 @@ fun CherryOpsNavGraph(
                 backStackEntry.arguments?.getString("projectId").orEmpty(), "UTF-8"
             )
             AdHocDispatchScreen(
+                projectId = projectId,
+                onNavigateBack = { navController.popBackStack() },
+                onTaskDispatched = { taskId ->
+                    navController.navigate(Screen.TaskStatus.createRoute(taskId)) {
+                        popUpTo(Screen.ProjectHome.createRoute(
+                            URLEncoder.encode(projectId, "UTF-8")
+                        ))
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.VoiceCapture.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val projectId = URLDecoder.decode(
+                backStackEntry.arguments?.getString("projectId").orEmpty(), "UTF-8"
+            )
+            VoiceCaptureScreen(
                 projectId = projectId,
                 onNavigateBack = { navController.popBackStack() },
                 onTaskDispatched = { taskId ->

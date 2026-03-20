@@ -1,0 +1,47 @@
+schema_version: "1"
+
+id: "draft-changelog"
+name: "Draft Changelog Entry"
+description: "Generate a changelog entry from recent commits"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "📋"
+category: dev
+persona: builder
+
+agent_mode: cherry_agent
+
+context_files:
+  - "CHANGELOG.md"
+  - "CLAUDE.md"
+
+variables:
+  - id: version_tag
+    label: "Version tag"
+    type: string
+    required: true
+    placeholder: "v1.2.0"
+
+prompt_template: |
+  Draft a changelog entry for version {{version_tag}}.
+
+  Instructions:
+  - Review recent git commits since the last release tag
+  - Group changes by category: Added, Changed, Fixed, Removed
+  - Follow Keep a Changelog format
+  - Be concise but descriptive
+  - Reference issue numbers where available
+
+  {{context}}
+
+  {{user_brief}}
+
+output_file: "outputs/changelog/{{version_tag}}-draft.md"
+output_format: markdown
+
+tags:
+  - changelog
+  - release
+  - dev
+min_app_version: "1.0.0"

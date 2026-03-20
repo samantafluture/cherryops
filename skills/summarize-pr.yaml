@@ -1,0 +1,49 @@
+schema_version: "1"
+
+id: "summarize-pr"
+name: "Summarize PR Diff"
+description: "Generate a clear summary of a pull request's changes"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "🔍"
+category: dev
+persona: builder
+
+agent_mode: api_direct
+
+context_files:
+  - "CLAUDE.md"
+
+variables:
+  - id: pr_diff
+    label: "PR diff content"
+    type: file_picker
+    required: true
+
+prompt_template: |
+  Summarize this pull request diff clearly and concisely.
+
+  Instructions:
+  - Start with a one-line summary of what this PR does
+  - List key changes grouped by file or feature area
+  - Note any potential concerns or breaking changes
+  - Keep it under 300 words
+
+  ---
+  {{context}}
+  ---
+
+  Diff:
+  {{pr_diff}}
+
+  {{user_brief}}
+
+output_file: "outputs/pr-summaries/{{date}}-summary.md"
+output_format: markdown
+
+tags:
+  - pr
+  - review
+  - dev
+min_app_version: "1.0.0"

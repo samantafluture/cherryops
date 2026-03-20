@@ -1,0 +1,51 @@
+schema_version: "1"
+
+id: "weekly-review"
+name: "Create Weekly Review"
+description: "Generate a weekly review from project activity and notes"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "📊"
+category: ops
+persona: operator
+
+agent_mode: api_direct
+
+context_files:
+  - "backlog.md"
+  - "context/weekly-notes.md"
+
+variables:
+  - id: week_ending
+    label: "Week ending date"
+    type: string
+    required: true
+    placeholder: "2026-03-20"
+
+prompt_template: |
+  Create a weekly review for the week ending {{week_ending}}.
+
+  Structure:
+  - Accomplishments (what got done)
+  - In Progress (what's underway)
+  - Blockers (what's stuck and why)
+  - Next Week Priorities (top 3-5 items)
+  - Metrics snapshot (if data available)
+
+  Be concise. Use bullet points. Focus on outcomes, not activities.
+
+  ---
+  {{context}}
+  ---
+
+  {{user_brief}}
+
+output_file: "outputs/reviews/week-{{week_ending}}.md"
+output_format: markdown
+
+tags:
+  - review
+  - weekly
+  - ops
+min_app_version: "1.0.0"

@@ -1,0 +1,56 @@
+schema_version: "1"
+
+id: "summarize-meeting"
+name: "Summarize Meeting Notes"
+description: "Turn raw meeting notes into a structured summary with action items"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "🗒️"
+category: ops
+persona: operator
+
+agent_mode: api_direct
+
+context_files:
+  - "context/sops/meeting-format.md"
+
+variables:
+  - id: meeting_notes
+    label: "Meeting notes"
+    type: file_picker
+    required: true
+  - id: meeting_name
+    label: "Meeting name"
+    type: string
+    required: true
+    placeholder: "weekly-standup"
+
+prompt_template: |
+  Summarize these meeting notes into a clean, structured format.
+
+  Include:
+  - One-paragraph summary (3-4 sentences)
+  - Key decisions made
+  - Action items with owners (if mentioned)
+  - Open questions or follow-ups needed
+
+  Follow the meeting format SOP if provided.
+
+  ---
+  {{context}}
+  ---
+
+  Meeting notes:
+  {{meeting_notes}}
+
+  {{user_brief}}
+
+output_file: "outputs/meetings/{{meeting_name}}-{{date}}.md"
+output_format: markdown
+
+tags:
+  - meeting
+  - summary
+  - ops
+min_app_version: "1.0.0"

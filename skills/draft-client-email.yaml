@@ -1,0 +1,57 @@
+schema_version: "1"
+
+id: "draft-client-email"
+name: "Draft Client Email"
+description: "Write a follow-up email based on the client brief"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "📧"
+category: client
+persona: operator
+
+agent_mode: api_direct
+
+context_files:
+  - "context/clients/{{client_name}}/brief.md"
+  - "context/sops/email-tone.md"
+
+variables:
+  - id: client_name
+    label: "Client name"
+    type: string
+    required: true
+    placeholder: "acme-corp"
+  - id: email_type
+    label: "Email type"
+    type: select
+    required: true
+    options:
+      - "follow-up"
+      - "proposal"
+      - "check-in"
+      - "thank-you"
+
+prompt_template: |
+  You are a professional business writer.
+
+  Using the client brief and tone guidelines below, draft a
+  {{email_type}} email. Requirements:
+  - Under 200 words
+  - Include a subject line
+  - Match the tone from the SOP
+
+  ---
+  {{context}}
+  ---
+
+  Additional notes from user: {{user_brief}}
+
+output_file: "outputs/emails/{{client_name}}-{{email_type}}.md"
+output_format: markdown
+
+tags:
+  - email
+  - client
+  - communication
+min_app_version: "1.0.0"

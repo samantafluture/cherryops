@@ -1,0 +1,45 @@
+schema_version: "1"
+
+id: "review-claude-md"
+name: "Review CLAUDE.md"
+description: "Audit CLAUDE.md for completeness, accuracy, and clarity"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "📝"
+category: dev
+persona: builder
+
+agent_mode: api_direct
+
+context_files:
+  - "CLAUDE.md"
+  - "package.json"
+
+variables: []
+
+prompt_template: |
+  Review the CLAUDE.md file for this project.
+
+  Check for:
+  - Completeness: does it cover project structure, key commands, conventions, and constraints?
+  - Accuracy: does the information match the actual project setup?
+  - Clarity: is it easy for Claude Code to parse and use?
+  - Missing sections: common patterns that should be documented but aren't
+
+  Provide specific, actionable suggestions for improvement.
+
+  ---
+  {{context}}
+  ---
+
+  {{user_brief}}
+
+output_file: "outputs/reviews/claude-md-review.md"
+output_format: markdown
+
+tags:
+  - review
+  - claude
+  - documentation
+min_app_version: "1.0.0"

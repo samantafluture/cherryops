@@ -1,0 +1,61 @@
+schema_version: "1"
+
+id: "proposal-outline"
+name: "Write Proposal Outline"
+description: "Generate a structured proposal outline from a project brief"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "📄"
+category: client
+persona: operator
+
+agent_mode: api_direct
+
+context_files:
+  - "context/clients/{{client_name}}/brief.md"
+  - "context/sops/proposal-template.md"
+
+variables:
+  - id: client_name
+    label: "Client name"
+    type: string
+    required: true
+    placeholder: "acme-corp"
+  - id: project_type
+    label: "Project type"
+    type: select
+    required: true
+    options:
+      - "consulting"
+      - "development"
+      - "design"
+      - "retainer"
+      - "other"
+
+prompt_template: |
+  Create a proposal outline for {{client_name}}.
+
+  Project type: {{project_type}}
+
+  Instructions:
+  - Follow the proposal template SOP
+  - Include: Executive Summary, Scope, Timeline, Deliverables, Investment
+  - Keep language professional but approachable
+  - Include placeholder sections for pricing and timeline
+  - Reference specific details from the client brief
+
+  ---
+  {{context}}
+  ---
+
+  {{user_brief}}
+
+output_file: "outputs/proposals/{{client_name}}-outline.md"
+output_format: markdown
+
+tags:
+  - proposal
+  - client
+  - business
+min_app_version: "1.0.0"

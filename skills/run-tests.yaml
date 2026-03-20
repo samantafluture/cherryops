@@ -1,0 +1,51 @@
+schema_version: "1"
+
+id: "run-tests"
+name: "Run Test Suite"
+description: "Run the project's test suite and report results"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "🧪"
+category: dev
+persona: builder
+
+agent_mode: cherry_agent
+
+context_files:
+  - "CLAUDE.md"
+  - "package.json"
+
+variables:
+  - id: test_scope
+    label: "Test scope"
+    type: select
+    required: false
+    options:
+      - "all"
+      - "unit"
+      - "integration"
+
+prompt_template: |
+  Run the project's test suite.
+
+  Scope: {{test_scope}}
+
+  Instructions:
+  - Read the project's test configuration to determine the correct command
+  - Run the tests
+  - Report the results clearly: total, passed, failed, skipped
+  - If any tests fail, include the failure output and a brief analysis
+
+  {{context}}
+
+  {{user_brief}}
+
+output_file: "outputs/test-results/{{date}}-results.md"
+output_format: markdown
+
+tags:
+  - testing
+  - dev
+  - ci
+min_app_version: "1.0.0"

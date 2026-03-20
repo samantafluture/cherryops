@@ -1,0 +1,59 @@
+schema_version: "1"
+
+id: "release-notes"
+name: "Generate Release Notes"
+description: "Create user-facing release notes from changelog and commits"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "🚀"
+category: dev
+persona: builder
+
+agent_mode: api_direct
+
+context_files:
+  - "CHANGELOG.md"
+  - "CLAUDE.md"
+
+variables:
+  - id: version
+    label: "Release version"
+    type: string
+    required: true
+    placeholder: "v1.2.0"
+  - id: audience
+    label: "Target audience"
+    type: select
+    required: false
+    options:
+      - "developers"
+      - "end-users"
+      - "both"
+
+prompt_template: |
+  Generate release notes for version {{version}}.
+
+  Target audience: {{audience}}
+
+  Instructions:
+  - Write in a friendly, professional tone
+  - Lead with the most impactful changes
+  - Group by: Highlights, Improvements, Bug Fixes
+  - Include migration notes if there are breaking changes
+  - Keep it concise — aim for a 2-minute read
+
+  ---
+  {{context}}
+  ---
+
+  {{user_brief}}
+
+output_file: "outputs/releases/{{version}}-notes.md"
+output_format: markdown
+
+tags:
+  - release
+  - notes
+  - dev
+min_app_version: "1.0.0"

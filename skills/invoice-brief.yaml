@@ -1,0 +1,57 @@
+schema_version: "1"
+
+id: "invoice-brief"
+name: "Generate Invoice Brief"
+description: "Create an invoice brief from project hours and deliverables"
+version: "1.0.0"
+author: "cherryops"
+
+icon: "💰"
+category: finance
+persona: operator
+
+agent_mode: api_direct
+
+context_files:
+  - "context/clients/{{client_name}}/brief.md"
+  - "context/clients/{{client_name}}/hours.md"
+
+variables:
+  - id: client_name
+    label: "Client name"
+    type: string
+    required: true
+    placeholder: "acme-corp"
+  - id: period
+    label: "Billing period"
+    type: string
+    required: true
+    placeholder: "March 2026"
+
+prompt_template: |
+  Generate an invoice brief for {{client_name}} covering {{period}}.
+
+  Include:
+  - Client name and billing period
+  - Line items from hours log and deliverables
+  - Subtotal per category
+  - Total amount
+  - Payment terms reminder
+
+  Format as a clean markdown document ready to be transferred to
+  an invoicing tool.
+
+  ---
+  {{context}}
+  ---
+
+  {{user_brief}}
+
+output_file: "outputs/invoices/{{client_name}}-{{period}}.md"
+output_format: markdown
+
+tags:
+  - invoice
+  - finance
+  - client
+min_app_version: "1.0.0"

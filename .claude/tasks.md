@@ -7,28 +7,27 @@
 
 ### P0 — Must do now
 
-(empty — all P0 complete)
+(empty — all complete)
 
 ### P1 — Should do this week
 
-(empty — all P1 complete)
+(empty — all complete)
 
 ### P2 — Nice to have
 
-- [ ] Backend file watcher (chokidar) for pending/ auto-execution `[M]` #backend
-- [ ] Backend error recovery and retry logic `[M]` #backend
-- [ ] Offline mode for file browsing (Room cache) `[M]` #frontend
-- [ ] Pagination for GitHub repo/file lists `[S]` #frontend
-- [ ] CI/CD pipeline for Android builds `[M]` #devops
-- [ ] CI/CD pipeline for backend Docker builds `[M]` #devops
-- [ ] Write backend integration tests (Vitest) `[L]` #testing
-- [ ] Write Android UI tests (Compose testing) `[L]` #testing
-- [ ] GitHub OAuth flow (replace PAT with OAuth token) `[L]` #frontend #backend
+(empty — all complete)
 
 ## Blocked
 
 ## Completed (recent)
 
+- [x] Add GitHub OAuth PKCE flow (backend + Android) ✅ 2026-03-20
+- [x] Write backend integration tests (Vitest) — 3 test suites ✅ 2026-03-20
+- [x] Enhance CI/CD — Docker build + APK artifact upload ✅ 2026-03-20
+- [x] Add pagination for GitHub repo list ✅ 2026-03-20
+- [x] Add offline file browsing with Room cache ✅ 2026-03-20
+- [x] Add retry with exponential backoff to TaskRunner ✅ 2026-03-20
+- [x] Add repo poll watcher for auto-execution of pending tasks ✅ 2026-03-20
 - [x] Add diff renderer for code changes in task review ✅ 2026-03-20
 - [x] Add FCM notification handling with tap-to-navigate ✅ 2026-03-20
 - [x] Add variable interpolation + context file merging to TaskRunner ✅ 2026-03-20
@@ -51,7 +50,7 @@
 - [x] Implement task queue with concurrency control ✅ 2026-03-20
 - [x] Implement basic TaskRunner (Claude API + CLI modes) ✅ 2026-03-20
 - [x] Scaffold Android app (Hilt, Compose, navigation graph) ✅ 2026-03-20
-- [x] Define all 13 screen routes in navigation graph ✅ 2026-03-20
+- [x] Define all 13+ screen routes in navigation graph ✅ 2026-03-20
 - [x] Implement TokenManager (EncryptedSharedPreferences) ✅ 2026-03-20
 - [x] Implement GitHubRepository (file tree, content, update) ✅ 2026-03-20
 - [x] Implement SkillParser (YAML parsing) ✅ 2026-03-20

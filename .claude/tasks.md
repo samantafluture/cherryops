@@ -7,18 +7,11 @@
 
 ### P0 — Must do now
 
-- [ ] Build Quick Capture (voice dispatch) `[M]` #frontend
-  - [ ] VoiceCaptureManager implementation (AudioRecord)
-  - [ ] TranscriptionService (Gemini Flash proxy)
-  - [ ] Voice UI (record button, waveform, transcription preview)
+(empty — all P0 complete)
 
 ### P1 — Should do this week
 
-- [ ] Implement backend FCM sender (Firebase Admin SDK) `[M]` #backend
-- [ ] Implement backend voice transcription proxy (Gemini Flash) `[M]` #backend
-- [ ] Complete TaskRunner variable interpolation + context file merging `[M]` #backend
-- [ ] FCM notification handling — tap-to-navigate to task review `[M]` #frontend
-- [ ] Diff renderer for file changes in task review `[S]` #frontend
+(empty — all P1 complete)
 
 ### P2 — Nice to have
 
@@ -36,6 +29,10 @@
 
 ## Completed (recent)
 
+- [x] Add diff renderer for code changes in task review ✅ 2026-03-20
+- [x] Add FCM notification handling with tap-to-navigate ✅ 2026-03-20
+- [x] Add variable interpolation + context file merging to TaskRunner ✅ 2026-03-20
+- [x] Add Voice Capture — record, transcribe, dispatch by voice ✅ 2026-03-20
 - [x] Wire all screens into NavGraph + fix DI bindings ✅ 2026-03-20
 - [x] Build Onboarding flow (PersonaSelect, BuilderSetup, OperatorSetup) ✅ 2026-03-20
 - [x] Build Settings screen (persona, GitHub status, dark mode, logout) ✅ 2026-03-20

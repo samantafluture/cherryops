@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.js.map
+
+# Environment files
+.env
+.env.development
+.env.production
+.env.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend
+backend/data/
+backend/*.db
+backend/*.sqlite
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/google-services.json
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# Test
+coverage/
+*.lcov
+
+# Logs
+*.log
+npm-debug.log*
+
+# Zone.Identifier files (WSL)
+*:Zone.Identifier
+
+# CherryTasks private files
+.claude/private/

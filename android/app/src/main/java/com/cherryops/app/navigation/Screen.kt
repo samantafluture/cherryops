@@ -35,6 +35,9 @@ sealed class Screen(val route: String) {
     data object AdHocDispatch : Screen("dispatch/{projectId}") {
         fun createRoute(projectId: String): String = "dispatch/$projectId"
     }
+    data object VoiceCapture : Screen("dispatch/{projectId}/voice") {
+        fun createRoute(projectId: String): String = "dispatch/$projectId/voice"
+    }
 
     // Tasks
     data object TaskStatus : Screen("task/{taskId}/status") {

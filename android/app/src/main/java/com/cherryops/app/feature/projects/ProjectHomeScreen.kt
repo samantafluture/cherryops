@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,6 +56,7 @@ fun ProjectHomeScreen(
     onFileBrowser: () -> Unit,
     onSkills: () -> Unit,
     onDispatch: () -> Unit,
+    onVoiceCapture: () -> Unit,
     onTaskClick: (String) -> Unit,
     viewModel: ProjectHomeViewModel = hiltViewModel()
 ) {
@@ -117,6 +119,14 @@ fun ProjectHomeScreen(
                         Icon(Icons.AutoMirrored.Filled.Send, null, Modifier.size(18.dp))
                         Spacer(Modifier.size(4.dp))
                         Text("Task")
+                    }
+                    FilledTonalButton(
+                        onClick = onVoiceCapture,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Mic, null, Modifier.size(18.dp))
+                        Spacer(Modifier.size(4.dp))
+                        Text("Voice")
                     }
                 }
             }

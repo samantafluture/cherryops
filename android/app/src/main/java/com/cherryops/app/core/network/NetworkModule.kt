@@ -2,6 +2,7 @@ package com.cherryops.app.core.network
 
 import com.cherryops.app.BuildConfig
 import com.cherryops.app.core.auth.AuthInterceptor
+import com.cherryops.app.feature.dispatch.BaseUrlProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,6 +73,10 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(GitHubApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBaseUrlProvider(): BaseUrlProvider = BaseUrlProviderImpl()
 
     @Provides
     @Singleton

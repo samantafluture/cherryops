@@ -14,7 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class TranscriptionService @Inject constructor(
-    private val httpClient: OkHttpClient,
+    @javax.inject.Named("backend") private val httpClient: OkHttpClient,
     private val baseUrlProvider: BaseUrlProvider
 ) {
 

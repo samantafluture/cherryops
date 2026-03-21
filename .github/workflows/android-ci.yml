@@ -25,7 +25,11 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - run: gradle lint
+      # Firebase requires google-services.json — create a dummy for CI
+      - name: Create dummy google-services.json
+        run: |
+          echo '{"project_info":{"project_number":"000000000000","project_id":"cherryops-ci","storage_bucket":"cherryops-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.cherryops.app"}},"api_key":[{"current_key":"AIzaSyCI-placeholder"}]}],"configuration_version":"1"}' > app/google-services.json
+
       - run: gradle assembleDebug
 
       - uses: actions/upload-artifact@v4

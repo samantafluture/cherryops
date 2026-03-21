@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: backend
+      dockerfile: Dockerfile.prod
+    container_name: cherryops-api
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - cherryops_data:/app/data
+    networks:
+      - infra-net
+    expose:
+      - "3100"
+
+volumes:
+  cherryops_data:
+    external: true
+    name: cherryops_data
+
+networks:
+  infra-net:
+    external: true
+    name: infra-net

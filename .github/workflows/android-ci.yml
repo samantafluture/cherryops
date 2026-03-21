@@ -3,10 +3,10 @@ name: Android CI
 on:
   push:
     branches: [main]
-    paths: [android/**]
+    paths: [android/**, .github/workflows/android-ci.yml]
   pull_request:
     branches: [main]
-    paths: [android/**]
+    paths: [android/**, .github/workflows/android-ci.yml]
 
 jobs:
   build:

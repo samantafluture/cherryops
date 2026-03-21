@@ -22,11 +22,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
 
-      - run: chmod +x gradlew
-      - run: ./gradlew lint
-      - run: ./gradlew assembleDebug
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: gradle lint
+      - run: gradle assembleDebug
 
       - uses: actions/upload-artifact@v4
         if: success()

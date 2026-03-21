@@ -7,7 +7,7 @@ import com.cherryops.app.data.model.SkillInputType
 
 /**
  * Lightweight YAML parser for skill definition files.
- * Handles the structured key-value format used in .cherryops/skills/*.yaml
+ * Handles the structured key-value format used in .cherryops/skills/ YAML files.
  */
 object SkillParser {
 

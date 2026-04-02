@@ -1,10 +1,10 @@
 <!-- Auto-generated from Notion. Do not edit manually. -->
-<!-- Last sync: 2026-04-02T20:57:31.566Z -->
+<!-- Last sync: 2026-04-02T21:42:16.634Z -->
 <!-- Source: https://www.notion.so/83f6c83bb3a546cda0739e7f25382a9a -->
 # Project: CherryOps
 
-> Last synced to repo: 2026-04-02T20:57:31.565Z
-> Last agent update: 2026-04-02T14:45:00.000Z
+> Last synced to repo: 2026-04-02T21:42:16.634Z
+> Last agent update: 2026-04-02T21:29:00.000Z
 
 ## Active Sprint
 
@@ -26,6 +26,12 @@
 ## Blocked
 
 ## Completed (recent)
+- [x] Add vps_read_file tool — read any file across all VPS projects #feature ✅ 2026-04-02
+- [x] Add vps_list_files tool — browse directory structure in any project #feature ✅ 2026-04-02
+- [x] Add vps_search_code tool — grep across all project codebases #feature ✅ 2026-04-02
+- [x] Add vps_create_branch tool — create feature branch from main in a project #feature ✅ 2026-04-02
+- [x] Add vps_create_pr tool — open GitHub PR from a claude/* branch #feature ✅ 2026-04-02
+- [x] Add vps_write_file tool — write files only on non-main branches #feature ✅ 2026-04-02
 
 ## Notes
 - Check CLAUDE.md for architectural decisions before starting work

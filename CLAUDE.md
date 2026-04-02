@@ -1,12 +1,13 @@
 # CherryOps — Claude Code Context
 
 ## What this project is
-CherryOps is a mobile command center for AI workflows.
-Android app (Kotlin/Compose) + backend (Fastify/TypeScript) + skill packs (YAML).
+CherryOps is a command center for AI workflows.
+Android app + Web dashboard + backend API + skill packs (YAML).
 Monorepo. Open source (Apache 2.0). Commercial Cloud tier is in a separate private repo.
 
 ## Repo structure
-- android/     — Kotlin + Jetpack Compose app
+- android/     — Kotlin + Jetpack Compose mobile app
+- web/         — React + TypeScript + Vite web dashboard
 - backend/     — cherryops-backend, Fastify + Node.js
 - skills/      — Starter skill YAML packs
 - docs/        — PRD, TDD (this file's neighbours)
@@ -25,6 +26,13 @@ Monorepo. Open source (Apache 2.0). Commercial Cloud tier is in a separate priva
 - Hilt for DI
 - Jetpack Compose navigation
 - Android Keystore for all sensitive storage (never SharedPreferences unencrypted)
+
+## Web Dashboard
+- Vite + React 18 + TypeScript + Tailwind CSS 4
+- React Router v7 + TanStack React Query v5
+- Same REST API as Android app — both are equal clients
+- Dev: `cd web && npm run dev` (proxies /api to localhost:3100)
+- Admin token login — token logged on backend startup
 
 ## Skill YAML schema
 - Defined in docs/cherryops-tdd.md §4

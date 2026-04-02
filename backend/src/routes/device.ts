@@ -1,9 +1,19 @@
 import type { FastifyInstance } from "fastify";
 import { getDatabase } from "../db/connection.js";
-import { upsertDevice } from "../db/devices.js";
+import { upsertDevice, getAllDevices } from "../db/devices.js";
 import type { DeviceRegisterRequest } from "../types.js";
 
 export async function deviceRoutes(app: FastifyInstance): Promise<void> {
+  app.get(
+    "/devices",
+    { onRequest: [app.authenticate] },
+    async (_request, reply) => {
+      const db = getDatabase();
+      const devices = getAllDevices(db);
+      return reply.send({ devices });
+    }
+  );
+
   app.post<{ Body: DeviceRegisterRequest }>(
     "/device/register",
     { onRequest: [app.authenticate] },

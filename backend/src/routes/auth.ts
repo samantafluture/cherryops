@@ -19,8 +19,35 @@ interface GitHubUser {
   avatar_url: string;
 }
 
-export function createAuthRoutes() {
+export function createAuthRoutes(adminToken: string) {
   return async function authRoutes(app: FastifyInstance): Promise<void> {
+    // Admin token login (for web dashboard)
+    app.post<{ Body: { admin_token: string } }>(
+      "/auth/token",
+      async (request, reply) => {
+        const { admin_token } = request.body;
+
+        if (!admin_token || admin_token !== adminToken) {
+          return reply.status(401).send({ error: "Invalid admin token" });
+        }
+
+        const accessToken = app.jwt.sign(
+          { sub: "admin" },
+          { expiresIn: "24h" }
+        );
+        const refreshToken = app.jwt.sign(
+          { sub: "admin", type: "refresh" },
+          { expiresIn: "30d" }
+        );
+
+        return reply.send({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: 86400,
+        });
+      }
+    );
+
     // Exchange GitHub OAuth code for token
     app.post<{ Body: GitHubOAuthCallbackBody }>(
       "/auth/github/callback",

@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { loadConfig } from "./config.js";
@@ -69,10 +70,16 @@ async function start(): Promise<void> {
   // Initialize repo poll watcher for auto-execution of pending tasks
   const repoPollWatcher = new RepoPollWatcher(repoManager, taskQueue);
 
+  // Generate admin token for dashboard login
+  const adminToken = config.adminToken || crypto.randomUUID();
+  if (!config.adminToken) {
+    app.log.info(`Dashboard admin token: ${adminToken}`);
+  }
+
   // Register routes under /api/v1 prefix
   await app.register(
     async (api) => {
-      await api.register(createAuthRoutes());
+      await api.register(createAuthRoutes(adminToken));
       await api.register(healthRoutes);
       await api.register(createTaskRoutes(taskQueue, repoManager));
       await api.register(skillRoutes);

@@ -6,6 +6,7 @@ import {
   getTaskById,
   updateTaskStatus,
   getRunningTaskCountByRepo,
+  getAllTasks,
 } from "../db/tasks.js";
 import type { TaskQueue } from "../services/taskQueue.js";
 import type { RepoManager } from "../services/repoManager.js";
@@ -23,6 +24,23 @@ const MAX_CONCURRENT_PER_REPO = 2;
 
 export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager) {
   return async function taskRoutes(app: FastifyInstance): Promise<void> {
+    // List all tasks with optional filters
+    app.get<{ Querystring: { status?: string; repo?: string; limit?: string; offset?: string } }>(
+      "/tasks",
+      { onRequest: [app.authenticate] },
+      async (request, reply) => {
+        const db = getDatabase();
+        const { status, repo, limit, offset } = request.query;
+        const result = getAllTasks(db, {
+          status: status as import("../types.js").TaskStatus | undefined,
+          repo,
+          limit: limit ? parseInt(limit, 10) : undefined,
+          offset: offset ? parseInt(offset, 10) : undefined,
+        });
+        return reply.send(result);
+      }
+    );
+
     app.post<{ Body: TaskDispatchRequest }>(
       "/tasks/dispatch",
       { onRequest: [app.authenticate] },

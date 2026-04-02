@@ -13,6 +13,9 @@ function optionalEnv(key: string, fallback: string): string {
 }
 
 export function loadConfig(): AppConfig {
+  // Generate admin token if not provided
+  const adminToken = optionalEnv("CHERRYOPS_ADMIN_TOKEN", "");
+
   return {
     port: parseInt(optionalEnv("PORT", "3100"), 10),
     nodeEnv: optionalEnv("NODE_ENV", "development"),
@@ -21,5 +24,6 @@ export function loadConfig(): AppConfig {
     firebaseServiceAccount: optionalEnv("FIREBASE_SERVICE_ACCOUNT_JSON", "{}"),
     geminiApiKey: optionalEnv("GEMINI_API_KEY", ""),
     anthropicApiKey: optionalEnv("ANTHROPIC_API_KEY", ""),
+    adminToken,
   };
 }

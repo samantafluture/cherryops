@@ -163,4 +163,5 @@ export interface AppConfig {
   firebaseServiceAccount: string;
   geminiApiKey: string;
   anthropicApiKey: string;
+  adminToken: string;
 }

@@ -110,6 +110,51 @@ export function getFailedTasks(
   return stmt.all() as TaskRecord[];
 }
 
+export function getAllTasks(
+  db: Database,
+  opts?: { status?: TaskStatus; repo?: string; limit?: number; offset?: number }
+): { tasks: TaskRecord[]; total: number } {
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (opts?.status) {
+    where.push("status = ?");
+    params.push(opts.status);
+  }
+  if (opts?.repo) {
+    where.push("repo = ?");
+    params.push(opts.repo);
+  }
+
+  const whereClause = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+
+  const countStmt = db.prepare(`SELECT COUNT(*) as total FROM tasks ${whereClause}`);
+  const { total } = countStmt.get(...params) as { total: number };
+
+  const limit = opts?.limit ?? 50;
+  const offset = opts?.offset ?? 0;
+  const dataStmt = db.prepare(
+    `SELECT * FROM tasks ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+  );
+  const tasks = dataStmt.all(...params, limit, offset) as TaskRecord[];
+
+  return { tasks, total };
+}
+
+export function getTaskCountsByStatus(
+  db: Database
+): Record<string, number> {
+  const stmt = db.prepare(
+    "SELECT status, COUNT(*) as count FROM tasks GROUP BY status"
+  );
+  const rows = stmt.all() as Array<{ status: string; count: number }>;
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    counts[row.status] = row.count;
+  }
+  return counts;
+}
+
 export function getNextQueuedTask(
   db: Database,
   repo: string

@@ -1,7 +1,7 @@
 # Project: CherryOps
 
 > Last synced to repo: 2026-04-02T21:42:16.634Z
-> Last agent update: 2026-04-03T23:00:00.000Z
+> Last agent update: 2026-04-03T23:08:05.000Z
 
 ## Active Sprint
 
@@ -10,6 +10,8 @@
 
 ### P1 — Should do this week
 
+- [ ] Fix shipit_ci_status: gh CLI in vps-mcp-server container needs GitHub auth (GITHUB_TOKEN env var) `[S]` #devops
+- [ ] Register vps-mcp-server as a managed project in the MCP project registry `[S]` #devops
 ### P2 — Nice to have
 - [ ] Add Web Audio API voice capture to web dashboard #feature
 - [ ] GitHub OAuth login for web dashboard (end-user auth) #feature

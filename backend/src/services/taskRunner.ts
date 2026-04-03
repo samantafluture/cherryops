@@ -215,7 +215,7 @@ export class TaskRunner {
     const escapedPrompt = prompt.replace(/'/g, "'\\''");
 
     const { stdout } = await execAsync(
-      `claude -p '${escapedPrompt}' --output-format text`,
+      `claude -p '${escapedPrompt}' --output-format text --dangerously-skip-permissions`,
       {
         timeout: 300000,
         env: {

@@ -10,6 +10,7 @@ import {
 } from "../db/tasks.js";
 import type { TaskQueue } from "../services/taskQueue.js";
 import type { RepoManager } from "../services/repoManager.js";
+import { loadSkillById } from "./skills.js";
 import type {
   TaskDispatchRequest,
   TaskDispatchResponse,
@@ -18,6 +19,8 @@ import type {
   TaskApproveRequest,
   TaskRedirectRequest,
   TaskRedirectResponse,
+  TaskCreateRequest,
+  TaskCreateResponse,
 } from "../types.js";
 
 const MAX_CONCURRENT_PER_REPO = 2;
@@ -38,6 +41,109 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
           offset: offset ? parseInt(offset, 10) : undefined,
         });
         return reply.send(result);
+      }
+    );
+
+    // High-level task creation: creates task file in repo + dispatches
+    app.post<{ Body: TaskCreateRequest }>(
+      "/tasks/create",
+      { onRequest: [app.authenticate] },
+      async (request, reply) => {
+        const { repo, brief, skill_id } = request.body;
+        const branch = request.body.branch || "main";
+
+        if (!repo || !brief) {
+          return reply
+            .status(400)
+            .send({ error: "repo and brief are required" });
+        }
+
+        const db = getDatabase();
+        const taskId = ulid();
+        const taskFilePath = `pending/${taskId}.md`;
+
+        // If skill_id provided, look up skill and merge context files
+        let enrichedBrief = brief;
+        let agentMode: import("../types.js").AgentMode = "api_direct";
+        let outputFile: string | null = null;
+
+        if (skill_id) {
+          const skill = await loadSkillById(skill_id);
+          if (skill) {
+            agentMode = skill.agent_mode as import("../types.js").AgentMode;
+            outputFile = skill.output_file;
+
+            if (skill.context_files?.length > 0) {
+              const contextParts: string[] = [];
+              for (const ctxPath of skill.context_files) {
+                try {
+                  const file = await repoManager.getFileContent(repo, ctxPath, branch);
+                  contextParts.push(`## ${ctxPath}\n\n${file.content}`);
+                } catch {
+                  contextParts.push(`## ${ctxPath}\n\n[File not found]`);
+                }
+              }
+              enrichedBrief += `\n\n---\n\nContext:\n${contextParts.join("\n\n---\n\n")}`;
+            }
+          }
+        }
+
+        // Build task file content with YAML frontmatter
+        const now = new Date().toISOString();
+        const lines = [
+          "---",
+          `id: ${taskId}`,
+          "status: pending",
+          `type: ${skill_id ? "skill" : "adhoc"}`,
+          `agent_mode: ${agentMode}`,
+          ...(skill_id ? [`skill_id: ${skill_id}`] : []),
+          ...(outputFile ? [`output_file: ${outputFile}`] : []),
+          `created_at: ${now}`,
+          "---",
+          "",
+          enrichedBrief,
+        ];
+
+        // Create the task file in the repo
+        try {
+          await repoManager.createOrUpdateFile(
+            repo,
+            taskFilePath,
+            lines.join("\n"),
+            `Add task ${taskId}`,
+            branch
+          );
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : "Failed to create task file";
+          return reply.status(502).send({ error: message });
+        }
+
+        const runningCount = getRunningTaskCountByRepo(db, repo);
+
+        insertTask(db, {
+          id: taskId,
+          repo,
+          branch,
+          task_file_path: taskFilePath,
+          status: "queued",
+          type: skill_id ? "skill" : "adhoc",
+          skill_id: skill_id ?? null,
+          agent_mode: agentMode,
+          output_file: outputFile,
+          created_at: now,
+        });
+
+        void taskQueue.enqueue(db, taskId, repo, branch, taskFilePath);
+
+        const response: TaskCreateResponse = {
+          task_id: taskId,
+          status: "queued",
+          estimated_start_seconds:
+            runningCount >= MAX_CONCURRENT_PER_REPO ? 30 : 5,
+        };
+
+        return reply.status(202).send(response);
       }
     );
 

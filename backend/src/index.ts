@@ -14,6 +14,9 @@ import { skillRoutes } from "./routes/skills.js";
 import { createVoiceRoutes } from "./routes/voice.js";
 import { deviceRoutes } from "./routes/device.js";
 import { createAuthRoutes } from "./routes/auth.js";
+import { createFileRoutes } from "./routes/files.js";
+import { createWsRoutes } from "./routes/ws.js";
+import websocket from "@fastify/websocket";
 import { getDatabase, closeDatabase } from "./db/connection.js";
 import { RepoManager } from "./services/repoManager.js";
 import { TaskRunner } from "./services/taskRunner.js";
@@ -22,6 +25,7 @@ import { FcmSender } from "./services/fcmSender.js";
 import { GeminiProxy } from "./services/geminiProxy.js";
 import { FrontmatterParser } from "./services/frontmatterParser.js";
 import { RepoPollWatcher } from "./services/repoPollWatcher.js";
+import { EventBus } from "./services/eventBus.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -47,6 +51,7 @@ async function start(): Promise<void> {
 
   await app.register(cors, { origin: true });
   await app.register(jwt, { secret: config.jwtSecret });
+  await app.register(websocket);
   app.decorate("authenticate", authMiddleware);
   await registerRateLimit(app);
 
@@ -67,6 +72,9 @@ async function start(): Promise<void> {
   const geminiProxy = new GeminiProxy(config.geminiApiKey);
   const taskRunner = new TaskRunner(config, repoManager, fcmSender, frontmatterParser);
   const taskQueue = new TaskQueue(taskRunner);
+  const eventBus = new EventBus();
+  taskRunner.setEventBus(eventBus);
+  taskQueue.setEventBus(eventBus);
 
   // Initialize repo poll watcher for auto-execution of pending tasks
   const repoPollWatcher = new RepoPollWatcher(repoManager, taskQueue);
@@ -84,8 +92,10 @@ async function start(): Promise<void> {
       await api.register(healthRoutes);
       await api.register(createTaskRoutes(taskQueue, repoManager));
       await api.register(skillRoutes);
+      await api.register(createFileRoutes(repoManager));
       await api.register(createVoiceRoutes(geminiProxy));
       await api.register(deviceRoutes);
+      await api.register(createWsRoutes(eventBus));
     },
     { prefix: "/api/v1" }
   );

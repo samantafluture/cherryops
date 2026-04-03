@@ -1,19 +1,4 @@
-import type { AppConfig } from "../types.js";
-
-interface GitHubFile {
-  path: string;
-  content: string;
-  sha: string;
-  encoding: string;
-}
-
-interface GitHubTreeItem {
-  path: string;
-  mode: string;
-  type: "blob" | "tree";
-  sha: string;
-  size?: number;
-}
+import type { AppConfig, GitHubFile, GitHubTreeItem } from "../types.js";
 
 const GITHUB_API = "https://api.github.com";
 

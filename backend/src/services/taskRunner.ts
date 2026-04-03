@@ -6,6 +6,7 @@ import type { RepoManager } from "./repoManager.js";
 import type { FcmSender } from "./fcmSender.js";
 import type { FrontmatterParser } from "./frontmatterParser.js";
 import type { AppConfig } from "../types.js";
+import type { EventBus } from "./eventBus.js";
 
 const execAsync = promisify(exec);
 
@@ -56,12 +57,18 @@ interface TaskFileData {
 }
 
 export class TaskRunner {
+  private eventBus: EventBus | null = null;
+
   constructor(
     private readonly config: AppConfig,
     private readonly repoManager: RepoManager,
     private readonly fcmSender: FcmSender,
     private readonly frontmatterParser: FrontmatterParser
   ) {}
+
+  setEventBus(eventBus: EventBus): void {
+    this.eventBus = eventBus;
+  }
 
   async executeTask(
     db: Database,
@@ -73,6 +80,7 @@ export class TaskRunner {
     updateTaskStatus(db, taskId, "running", {
       started_at: new Date().toISOString(),
     });
+    this.eventBus?.emitTaskUpdate({ task_id: taskId, status: "running", repo });
 
     try {
       const fileData = await withRetry(
@@ -131,6 +139,7 @@ export class TaskRunner {
         commit_sha: commitSha,
         output_file: fileData.output_file,
       });
+      this.eventBus?.emitTaskUpdate({ task_id: taskId, status: "complete", repo });
 
       await this.fcmSender.sendTaskUpdate(taskId, "complete", repo, fileData.output_file);
     } catch (error) {
@@ -141,6 +150,7 @@ export class TaskRunner {
         completed_at: new Date().toISOString(),
         error: message,
       });
+      this.eventBus?.emitTaskUpdate({ task_id: taskId, status: "error", repo, error: message });
 
       await this.fcmSender.sendTaskUpdate(taskId, "error", repo);
     }

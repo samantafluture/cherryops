@@ -71,6 +71,62 @@ export interface AuthResponse {
   expires_in: number;
 }
 
+export interface TaskCreateResponse {
+  task_id: string;
+  status: "queued";
+  estimated_start_seconds: number;
+}
+
+export type SkillCategory = "client" | "content" | "dev" | "ops" | "finance" | "custom";
+export type SkillPersona = "builder" | "operator" | "both";
+
+export interface SkillVariable {
+  id: string;
+  label: string;
+  type: string;
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+}
+
+export interface SkillDefinition {
+  schema_version: string;
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  author: string;
+  icon: string;
+  category: SkillCategory;
+  persona: SkillPersona;
+  agent_mode: string;
+  context_files: string[];
+  variables: SkillVariable[];
+  prompt_template: string;
+  output_file: string;
+  output_format: string;
+  tags: string[];
+}
+
+export interface SkillListResponse {
+  skills: SkillDefinition[];
+}
+
+export interface GitHubTreeItem {
+  path: string;
+  mode: string;
+  type: "blob" | "tree";
+  sha: string;
+  size?: number;
+}
+
+export interface FileContentResponse {
+  path: string;
+  content: string;
+  sha: string;
+  encoding: string;
+}
+
 // API client
 class ApiError extends Error {
   status: number;
@@ -157,7 +213,33 @@ export const api = {
       method: "POST",
     }),
 
+  createTask: (params: { repo: string; branch?: string; brief: string; skill_id?: string }) =>
+    request<TaskCreateResponse>("/api/v1/tasks/create", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
+
+  // Files
+  fileTree: (repo: string, branch = "main") => {
+    const query = new URLSearchParams({ repo, branch });
+    return request<{ tree: GitHubTreeItem[] }>(`/api/v1/files/tree?${query}`);
+  },
+
+  fileContent: (repo: string, path: string, branch = "main") => {
+    const query = new URLSearchParams({ repo, path, branch });
+    return request<FileContentResponse>(`/api/v1/files/content?${query}`);
+  },
+
+  updateFileContent: (params: { repo: string; path: string; content: string; sha: string; branch?: string; message?: string }) =>
+    request<{ sha: string; commitSha: string }>("/api/v1/files/content", {
+      method: "PUT",
+      body: JSON.stringify(params),
+    }),
+
   // Skills
+  listSkills: () =>
+    request<SkillListResponse>("/api/v1/skills"),
+
   validateSkill: (yaml: string) =>
     request<SkillValidateResponse>("/api/v1/skills/validate", {
       method: "POST",

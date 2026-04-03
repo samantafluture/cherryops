@@ -1,10 +1,29 @@
 import type { FastifyInstance } from "fastify";
 import yaml from "js-yaml";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type {
   SkillValidateRequest,
   SkillValidateResponse,
   SkillDefinition,
 } from "../types.js";
+
+const SKILLS_DIR = path.resolve("../skills");
+
+export async function loadSkillById(skillId: string): Promise<SkillDefinition | null> {
+  try {
+    const entries = await fs.readdir(SKILLS_DIR);
+    const yamlFiles = entries.filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
+    for (const file of yamlFiles) {
+      const content = await fs.readFile(path.join(SKILLS_DIR, file), "utf-8");
+      const parsed = yaml.load(content) as SkillDefinition;
+      if (parsed?.id === skillId) return parsed;
+    }
+  } catch {
+    // Skills directory may not exist
+  }
+  return null;
+}
 
 const REQUIRED_FIELDS: (keyof SkillDefinition)[] = [
   "schema_version",
@@ -29,6 +48,41 @@ const VALID_OUTPUT_FORMATS = ["markdown", "plain", "diff"];
 const VALID_VARIABLE_TYPES = ["string", "select", "file_picker"];
 
 export async function skillRoutes(app: FastifyInstance): Promise<void> {
+  // List all available skills from the skills/ directory
+  app.get(
+    "/skills",
+    { onRequest: [app.authenticate] },
+    async (_request, reply) => {
+      try {
+        const entries = await fs.readdir(SKILLS_DIR);
+        const yamlFiles = entries.filter(
+          (f) => f.endsWith(".yaml") || f.endsWith(".yml")
+        );
+
+        const skills: SkillDefinition[] = [];
+        for (const file of yamlFiles) {
+          try {
+            const content = await fs.readFile(
+              path.join(SKILLS_DIR, file),
+              "utf-8"
+            );
+            const parsed = yaml.load(content) as SkillDefinition;
+            if (parsed && typeof parsed === "object" && parsed.id) {
+              skills.push(parsed);
+            }
+          } catch {
+            // Skip files that fail to parse
+          }
+        }
+
+        skills.sort((a, b) => a.category.localeCompare(b.category));
+        return reply.send({ skills });
+      } catch {
+        return reply.send({ skills: [] });
+      }
+    }
+  );
+
   app.post<{ Body: SkillValidateRequest }>(
     "/skills/validate",
     { onRequest: [app.authenticate] },

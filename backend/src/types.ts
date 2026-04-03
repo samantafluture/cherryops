@@ -87,6 +87,19 @@ export interface TaskDispatchRequest {
   task_file_path: string;
 }
 
+export interface TaskCreateRequest {
+  repo: string;
+  branch?: string;
+  brief: string;
+  skill_id?: string;
+}
+
+export interface TaskCreateResponse {
+  task_id: string;
+  status: "queued";
+  estimated_start_seconds: number;
+}
+
 export interface TaskDispatchResponse {
   task_id: string;
   status: "queued";
@@ -153,6 +166,21 @@ export interface DeviceRegisterRequest {
   fcm_token: string;
   device_id: string;
   platform: string;
+}
+
+export interface GitHubTreeItem {
+  path: string;
+  mode: string;
+  type: "blob" | "tree";
+  sha: string;
+  size?: number;
+}
+
+export interface GitHubFile {
+  path: string;
+  content: string;
+  sha: string;
+  encoding: string;
 }
 
 export interface AppConfig {

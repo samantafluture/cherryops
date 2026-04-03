@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import Skills from "./pages/Skills";
 import Devices from "./pages/Devices";
+import Files from "./pages/Files";
+import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
@@ -25,10 +27,12 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route element={<AppShell />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/skills" element={<Skills />} />
+              <Route path="/files" element={<Files />} />
               <Route path="/devices" element={<Devices />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

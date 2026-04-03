@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useTasks } from "../hooks/useTasks";
 import StatusBadge from "../components/ui/StatusBadge";
 import { api, type TaskStatus, type TaskRecord } from "../lib/api";
-import { ChevronDown, ChevronRight, Check, Redo2, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import DiffViewer from "../components/ui/DiffViewer";
+import { useTaskStream } from "../hooks/useTaskStream";
 
 const STATUS_OPTIONS = ["", "queued", "running", "complete", "error", "done", "discarded"];
 
@@ -11,7 +13,9 @@ export default function Tasks() {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
   const limit = 20;
+  const { connected } = useTaskStream();
 
   const { data, refetch } = useTasks({
     status: statusFilter || undefined,
@@ -22,18 +26,39 @@ export default function Tasks() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Tasks</h1>
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-          className="bg-surface-alt border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-cherry-500"
-        >
-          <option value="">All statuses</option>
-          {STATUS_OPTIONS.filter(Boolean).map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold">Tasks</h1>
+          <span title={connected ? "Live updates active" : "Using polling"}>
+            {connected ? <Wifi className="w-4 h-4 text-status-complete" /> : <WifiOff className="w-4 h-4 text-text-muted" />}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-cherry-600 hover:bg-cherry-700 text-white rounded-lg text-sm font-medium transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            New Task
+          </button>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+            className="bg-surface-alt border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-cherry-500"
+          >
+            <option value="">All statuses</option>
+            {STATUS_OPTIONS.filter(Boolean).map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {showCreate && (
+        <NewTaskForm
+          onCreated={() => { setShowCreate(false); refetch(); }}
+          onCancel={() => setShowCreate(false)}
+        />
+      )}
 
       <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
@@ -99,6 +124,8 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
   onAction: () => void;
 }) {
   const [output, setOutput] = useState<string | null>(null);
+  const [diff, setDiff] = useState<string | null>(null);
+  const [outputFormat, setOutputFormat] = useState<string | null>(null);
   const [redirectBrief, setRedirectBrief] = useState("");
   const [acting, setActing] = useState(false);
 
@@ -107,6 +134,8 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
       try {
         const res = await api.taskResult(task.id);
         setOutput(res.content);
+        setDiff(res.diff);
+        setOutputFormat(res.output_format);
       } catch { /* ignore */ }
     }
     onToggle();
@@ -161,10 +190,16 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
                 {task.error && <div className="col-span-2 text-status-error"><span className="text-text-muted">Error:</span> {task.error}</div>}
               </div>
 
-              {output && (
-                <div className="bg-surface-alt border border-border rounded-lg p-4 prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{output}</ReactMarkdown>
-                </div>
+              {diff && <DiffViewer diff={diff} />}
+
+              {output && !diff && (
+                outputFormat === "diff" ? (
+                  <DiffViewer diff={output} />
+                ) : (
+                  <div className="bg-surface-alt border border-border rounded-lg p-4 prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown>{output}</ReactMarkdown>
+                  </div>
+                )
               )}
 
               {task.status === "complete" && (
@@ -194,5 +229,75 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
         </tr>
       )}
     </>
+  );
+}
+
+function NewTaskForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
+  const [repo, setRepo] = useState("");
+  const [brief, setBrief] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!repo.trim() || !brief.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await api.createTask({ repo: repo.trim(), brief: brief.trim() });
+      onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create task");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-surface-alt border border-border rounded-xl p-4 space-y-4">
+      <h2 className="text-sm font-medium text-text-muted">Dispatch a new ad-hoc task</h2>
+
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <label className="block text-xs text-text-muted mb-1">Repository</label>
+          <input
+            value={repo}
+            onChange={(e) => setRepo(e.target.value)}
+            placeholder="owner/repo"
+            className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-cherry-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-text-muted mb-1">Task brief</label>
+          <textarea
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            placeholder="Describe what the agent should do..."
+            rows={4}
+            className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-cherry-500 resize-y"
+          />
+        </div>
+      </div>
+
+      {error && <p className="text-sm text-status-error">{error}</p>}
+
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={submitting || !repo.trim() || !brief.trim()}
+          className="flex items-center gap-1.5 px-4 py-2 bg-cherry-600 hover:bg-cherry-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition cursor-pointer"
+        >
+          <Send className="w-4 h-4" />
+          {submitting ? "Dispatching..." : "Dispatch"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 bg-surface border border-border rounded-lg text-sm text-text-muted hover:text-text hover:bg-surface-hover transition cursor-pointer"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }

@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   ListTodo,
   Sparkles,
+  FolderOpen,
   Smartphone,
   Settings,
   LogOut,
@@ -13,6 +14,7 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Overview" },
   { to: "/tasks", icon: ListTodo, label: "Tasks" },
   { to: "/skills", icon: Sparkles, label: "Skills" },
+  { to: "/files", icon: FolderOpen, label: "Files" },
   { to: "/devices", icon: Smartphone, label: "Devices" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];

@@ -1,6 +1,3 @@
-<!-- Auto-generated from Notion. Do not edit manually. -->
-<!-- Last sync: 2026-04-02T21:42:16.634Z -->
-<!-- Source: https://www.notion.so/83f6c83bb3a546cda0739e7f25382a9a -->
 # Project: CherryOps
 
 > Last synced to repo: 2026-04-02T21:42:16.634Z

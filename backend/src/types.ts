@@ -92,6 +92,7 @@ export interface TaskCreateRequest {
   branch?: string;
   brief: string;
   skill_id?: string;
+  agent_mode?: AgentMode;
 }
 
 export interface TaskCreateResponse {

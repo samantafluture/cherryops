@@ -213,7 +213,7 @@ export const api = {
       method: "POST",
     }),
 
-  createTask: (params: { repo: string; branch?: string; brief: string; skill_id?: string }) =>
+  createTask: (params: { repo: string; branch?: string; brief: string; skill_id?: string; agent_mode?: "api_direct" | "cherry_agent" }) =>
     request<TaskCreateResponse>("/api/v1/tasks/create", {
       method: "POST",
       body: JSON.stringify(params),

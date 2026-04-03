@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { api } from "../../lib/api";
-import { Zap, Send, X, CheckCircle } from "lucide-react";
+import { Zap, Send, X, CheckCircle, Bot, Code } from "lucide-react";
 
 export default function QuickCapture() {
   const [open, setOpen] = useState(false);
   const [brief, setBrief] = useState("");
+  const [agentMode, setAgentMode] = useState<"api_direct" | "cherry_agent">("cherry_agent");
   const [submitting, setSubmitting] = useState(false);
   const [dispatched, setDispatched] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export default function QuickCapture() {
     setSubmitting(true);
     setError(null);
     try {
-      await api.createTask({ repo: defaultRepo, brief: brief.trim() });
+      await api.createTask({ repo: defaultRepo, brief: brief.trim(), agent_mode: agentMode });
       setBrief("");
       setDispatched(true);
       setTimeout(() => { setDispatched(false); setOpen(false); }, 1500);
@@ -98,6 +99,31 @@ export default function QuickCapture() {
             />
 
             {error && <p className="text-xs text-status-error">{error}</p>}
+
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setAgentMode("cherry_agent")}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
+                  agentMode === "cherry_agent"
+                    ? "bg-cherry-600/15 text-cherry-400"
+                    : "text-text-muted hover:text-text"
+                }`}
+              >
+                <Bot className="w-3 h-3" /> Agent
+              </button>
+              <button
+                type="button"
+                onClick={() => setAgentMode("api_direct")}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
+                  agentMode === "api_direct"
+                    ? "bg-cherry-600/15 text-cherry-400"
+                    : "text-text-muted hover:text-text"
+                }`}
+              >
+                <Code className="w-3 h-3" /> API
+              </button>
+            </div>
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-text-muted">Ctrl+Enter to dispatch</span>

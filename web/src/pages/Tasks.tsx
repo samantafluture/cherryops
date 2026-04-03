@@ -3,7 +3,7 @@ import { useTasks } from "../hooks/useTasks";
 import { useFileContent } from "../hooks/useFileTree";
 import StatusBadge from "../components/ui/StatusBadge";
 import { api, type TaskStatus, type TaskRecord } from "../lib/api";
-import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff, ClipboardList, Bot, Circle, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff, ClipboardList, Bot, Circle, CheckCircle2, Code } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import DiffViewer from "../components/ui/DiffViewer";
 import { useTaskStream } from "../hooks/useTaskStream";
@@ -474,6 +474,7 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
 function NewTaskForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
   const [repo, setRepo] = useState("");
   const [brief, setBrief] = useState("");
+  const [agentMode, setAgentMode] = useState<"api_direct" | "cherry_agent">("cherry_agent");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -483,7 +484,7 @@ function NewTaskForm({ onCreated, onCancel }: { onCreated: () => void; onCancel:
     setSubmitting(true);
     setError(null);
     try {
-      await api.createTask({ repo: repo.trim(), brief: brief.trim() });
+      await api.createTask({ repo: repo.trim(), brief: brief.trim(), agent_mode: agentMode });
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create task");
@@ -515,6 +516,33 @@ function NewTaskForm({ onCreated, onCancel }: { onCreated: () => void; onCancel:
             rows={4}
             className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-cherry-500 resize-y"
           />
+        </div>
+        <div>
+          <label className="block text-xs text-text-muted mb-1">Agent mode</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAgentMode("cherry_agent")}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm border transition cursor-pointer ${
+                agentMode === "cherry_agent"
+                  ? "border-cherry-500 bg-cherry-600/15 text-cherry-400"
+                  : "border-border bg-surface text-text-muted hover:text-text"
+              }`}
+            >
+              <Bot className="w-4 h-4" /> Agent (can read/write files)
+            </button>
+            <button
+              type="button"
+              onClick={() => setAgentMode("api_direct")}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm border transition cursor-pointer ${
+                agentMode === "api_direct"
+                  ? "border-cherry-500 bg-cherry-600/15 text-cherry-400"
+                  : "border-border bg-surface text-text-muted hover:text-text"
+              }`}
+            >
+              <Code className="w-4 h-4" /> API Direct (text only)
+            </button>
+          </div>
         </div>
       </div>
 

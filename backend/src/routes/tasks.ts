@@ -49,7 +49,7 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
       "/tasks/create",
       { onRequest: [app.authenticate] },
       async (request, reply) => {
-        const { repo, brief, skill_id } = request.body;
+        const { repo, brief, skill_id, agent_mode: requestedMode } = request.body;
         const branch = request.body.branch || "main";
 
         if (!repo || !brief) {
@@ -64,7 +64,7 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
 
         // If skill_id provided, look up skill and merge context files
         let enrichedBrief = brief;
-        let agentMode: import("../types.js").AgentMode = "api_direct";
+        let agentMode: import("../types.js").AgentMode = requestedMode || "api_direct";
         let outputFile: string | null = null;
 
         if (skill_id) {

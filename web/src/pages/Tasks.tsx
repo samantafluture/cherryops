@@ -1,27 +1,20 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTasks } from "../hooks/useTasks";
+import { useFileContent } from "../hooks/useFileTree";
 import StatusBadge from "../components/ui/StatusBadge";
 import { api, type TaskStatus, type TaskRecord } from "../lib/api";
-import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff, ClipboardList, Bot, Circle, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import DiffViewer from "../components/ui/DiffViewer";
 import { useTaskStream } from "../hooks/useTaskStream";
 
+type Tab = "project" | "agent";
+
 const STATUS_OPTIONS = ["", "queued", "running", "complete", "error", "done", "discarded"];
 
 export default function Tasks() {
-  const [statusFilter, setStatusFilter] = useState("");
-  const [page, setPage] = useState(0);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const limit = 20;
+  const [tab, setTab] = useState<Tab>("project");
   const { connected } = useTaskStream();
-
-  const { data, refetch } = useTasks({
-    status: statusFilter || undefined,
-    limit,
-    offset: page * limit,
-  });
 
   return (
     <div className="space-y-6">
@@ -32,25 +25,272 @@ export default function Tasks() {
             {connected ? <Wifi className="w-4 h-4 text-status-complete" /> : <WifiOff className="w-4 h-4 text-text-muted" />}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowCreate(!showCreate)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-cherry-600 hover:bg-cherry-700 text-white rounded-lg text-sm font-medium transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            New Task
-          </button>
-          <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-            className="bg-surface-alt border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-cherry-500"
-          >
-            <option value="">All statuses</option>
-            {STATUS_OPTIONS.filter(Boolean).map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+      </div>
+
+      <div className="flex gap-1 border-b border-border">
+        <button
+          onClick={() => setTab("project")}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition -mb-px cursor-pointer ${
+            tab === "project"
+              ? "border-b-2 border-cherry-400 text-cherry-400"
+              : "text-text-muted hover:text-text"
+          }`}
+        >
+          <ClipboardList className="w-4 h-4" /> Project Tasks
+        </button>
+        <button
+          onClick={() => setTab("agent")}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition -mb-px cursor-pointer ${
+            tab === "agent"
+              ? "border-b-2 border-cherry-400 text-cherry-400"
+              : "text-text-muted hover:text-text"
+          }`}
+        >
+          <Bot className="w-4 h-4" /> Agent Tasks
+        </button>
+      </div>
+
+      {tab === "project" ? <ProjectTasksTab /> : <AgentTasksTab />}
+    </div>
+  );
+}
+
+// --- Project Tasks Tab ---
+
+interface ParsedTask {
+  text: string;
+  done: boolean;
+  tags: string[];
+  date?: string;
+  note?: string;
+  subtasks: ParsedTask[];
+}
+
+interface TaskSection {
+  title: string;
+  tasks: ParsedTask[];
+}
+
+function parseTasksMarkdown(content: string): TaskSection[] {
+  const lines = content.split("\n");
+  const sections: TaskSection[] = [];
+  let currentSection: TaskSection | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+
+    // Section headers (### P0, ### P1, ## Blocked, ## Completed, etc.)
+    const sectionMatch = line.match(/^#{2,3}\s+(.+)/);
+    if (sectionMatch) {
+      currentSection = { title: sectionMatch[1]!, tasks: [] };
+      sections.push(currentSection);
+      continue;
+    }
+
+    // Top-level task: - [ ] or - [x]
+    const taskMatch = line.match(/^- \[([ x])\] (.+)/);
+    if (taskMatch && currentSection) {
+      const done = taskMatch[1] === "x";
+      const rawText = taskMatch[2]!;
+
+      // Extract tags (#feature, #chore, etc.)
+      const tags = [...rawText.matchAll(/#(\w+)/g)].map((m) => m[1]!);
+      // Extract completion date
+      const dateMatch = rawText.match(/✅\s*(\d{4}-\d{2}-\d{2})/);
+      // Clean text
+      const text = rawText.replace(/#\w+/g, "").replace(/✅\s*\d{4}-\d{2}-\d{2}/, "").replace(/👤\s*\w+/, "").trim();
+
+      const task: ParsedTask = { text, done, tags, date: dateMatch?.[1], note: undefined, subtasks: [] };
+
+      // Look ahead for notes (> lines) and subtasks (indented - [ ])
+      while (i + 1 < lines.length) {
+        const next = lines[i + 1]!;
+        if (next.match(/^\s+>\s*(.+)/)) {
+          task.note = next.replace(/^\s+>\s*/, "");
+          i++;
+        } else if (next.match(/^\s+- \[([ x])\] (.+)/)) {
+          const subMatch = next.match(/^\s+- \[([ x])\] (.+)/)!;
+          task.subtasks.push({
+            text: subMatch[2]!.replace(/#\w+/g, "").trim(),
+            done: subMatch[1] === "x",
+            tags: [],
+            subtasks: [],
+          });
+          i++;
+        } else {
+          break;
+        }
+      }
+
+      currentSection.tasks.push(task);
+    }
+  }
+
+  return sections;
+}
+
+const PRIORITY_COLORS: Record<string, string> = {
+  "P0": "text-status-error",
+  "P1": "text-status-running",
+  "P2": "text-text-muted",
+};
+
+function getPriorityFromTitle(title: string): string | null {
+  const match = title.match(/P(\d)/);
+  return match ? `P${match[1]}` : null;
+}
+
+function ProjectTasksTab() {
+  const defaultRepo = localStorage.getItem("cherryops_default_repo") ?? "";
+  const [repo, setRepo] = useState(defaultRepo);
+  const [activeRepo, setActiveRepo] = useState(defaultRepo);
+  const { data, isLoading, error } = useFileContent(activeRepo, ".claude/tasks.md");
+
+  const sections = useMemo(() => {
+    if (!data?.content) return [];
+    return parseTasksMarkdown(data.content);
+  }, [data]);
+
+  // Filter out empty sections and the notes/metadata sections
+  const activeSections = sections.filter(
+    (s) => s.tasks.length > 0 && !s.title.toLowerCase().includes("notes")
+  );
+
+  const handleLoadRepo = () => {
+    if (repo.trim()) setActiveRepo(repo.trim());
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <input
+          value={repo}
+          onChange={(e) => setRepo(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleLoadRepo()}
+          placeholder="owner/repo"
+          className="flex-1 max-w-sm px-3 py-2 bg-surface-alt border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-cherry-500"
+        />
+        <button
+          onClick={handleLoadRepo}
+          disabled={!repo.trim()}
+          className="px-4 py-2 bg-cherry-600 hover:bg-cherry-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition cursor-pointer"
+        >
+          Load
+        </button>
+      </div>
+
+      {isLoading && <p className="text-sm text-text-muted">Loading tasks...</p>}
+      {error && <p className="text-sm text-text-muted">No .claude/tasks.md found in this repo.</p>}
+
+      {activeSections.map((section) => {
+        const priority = getPriorityFromTitle(section.title);
+        return (
+          <div key={section.title} className="bg-surface-alt border border-border rounded-xl p-4">
+            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+              {priority && (
+                <span className={`text-xs font-bold ${PRIORITY_COLORS[priority] ?? "text-text-muted"}`}>
+                  {priority}
+                </span>
+              )}
+              {section.title}
+            </h3>
+            <ul className="space-y-2">
+              {section.tasks.map((task, i) => (
+                <ProjectTaskItem key={i} task={task} />
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+
+      {!isLoading && !error && activeSections.length === 0 && activeRepo && (
+        <p className="text-sm text-text-muted">No tasks found.</p>
+      )}
+    </div>
+  );
+}
+
+function ProjectTaskItem({ task }: { task: ParsedTask }) {
+  return (
+    <li className="space-y-1">
+      <div className="flex items-start gap-2">
+        {task.done ? (
+          <CheckCircle2 className="w-4 h-4 text-status-complete mt-0.5 shrink-0" />
+        ) : (
+          <Circle className="w-4 h-4 text-text-muted mt-0.5 shrink-0" />
+        )}
+        <div className="flex-1 min-w-0">
+          <span className={`text-sm ${task.done ? "line-through text-text-muted" : "text-text"}`}>
+            {task.text}
+          </span>
+          {task.tags.map((tag) => (
+            <span key={tag} className="ml-1.5 px-1.5 py-0.5 bg-surface-hover rounded text-xs text-text-muted">
+              {tag}
+            </span>
+          ))}
+          {task.date && (
+            <span className="ml-1.5 text-xs text-text-muted">{task.date}</span>
+          )}
         </div>
+      </div>
+      {task.note && (
+        <p className="text-xs text-text-muted ml-6 italic">{task.note}</p>
+      )}
+      {task.subtasks.length > 0 && (
+        <ul className="ml-6 space-y-1">
+          {task.subtasks.map((sub, i) => (
+            <li key={i} className="flex items-start gap-2">
+              {sub.done ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-status-complete mt-0.5 shrink-0" />
+              ) : (
+                <Circle className="w-3.5 h-3.5 text-text-muted mt-0.5 shrink-0" />
+              )}
+              <span className={`text-xs ${sub.done ? "line-through text-text-muted" : "text-text"}`}>
+                {sub.text}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+// --- Agent Tasks Tab ---
+
+function AgentTasksTab() {
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const limit = 20;
+
+  const { data, refetch } = useTasks({
+    status: statusFilter || undefined,
+    limit,
+    offset: page * limit,
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowCreate(!showCreate)}
+          className="flex items-center gap-1.5 px-3 py-2 bg-cherry-600 hover:bg-cherry-700 text-white rounded-lg text-sm font-medium transition cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          New Task
+        </button>
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+          className="bg-surface-alt border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-cherry-500"
+        >
+          <option value="">All statuses</option>
+          {STATUS_OPTIONS.filter(Boolean).map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
       </div>
 
       {showCreate && (
@@ -91,7 +331,6 @@ export default function Tasks() {
         </table>
       </div>
 
-      {/* Pagination */}
       {data && data.total > limit && (
         <div className="flex items-center justify-between text-sm text-text-muted">
           <span>Showing {page * limit + 1}–{Math.min((page + 1) * limit, data.total)} of {data.total}</span>

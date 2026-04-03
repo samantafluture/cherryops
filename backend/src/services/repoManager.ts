@@ -110,6 +110,17 @@ export class RepoManager {
     });
   }
 
+  async createBranchFromSha(
+    repo: string,
+    branchName: string,
+    sha: string
+  ): Promise<void> {
+    await this.fetchJson(`${GITHUB_API}/repos/${repo}/git/refs`, {
+      method: "POST",
+      body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha }),
+    });
+  }
+
   async createPullRequest(
     repo: string,
     head: string,

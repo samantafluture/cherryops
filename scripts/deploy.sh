@@ -21,6 +21,7 @@ echo "→ Copying nginx config..."
 cp nginx/cherryops.conf ~/apps/infra/nginx/conf.d/cherryops.conf
 
 echo "→ Starting API..."
+docker rm -f cherryops-api 2>/dev/null || true
 docker compose -f docker-compose.prod.yml up -d api
 
 echo "→ Reloading nginx..."

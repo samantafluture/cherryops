@@ -7,10 +7,17 @@ echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 cd "$(dirname "$0")/.."
 
 echo "→ Pulling latest code..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
-echo "→ Building Docker image..."
+echo "→ Building Docker images..."
 docker compose -f docker-compose.prod.yml build
+
+echo "→ Deploying web assets..."
+docker compose -f docker-compose.prod.yml run --rm web-assets
+
+echo "→ Copying nginx config..."
+cp nginx/cherryops.conf ~/apps/infra/nginx/conf.d/cherryops.conf
 
 echo "→ Starting API..."
 docker compose -f docker-compose.prod.yml up -d api

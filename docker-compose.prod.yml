@@ -13,10 +13,22 @@ services:
     expose:
       - "3100"
 
+  web-assets:
+    build:
+      context: web
+      dockerfile: Dockerfile.prod
+    profiles: [tools]
+    volumes:
+      - cherryops_web:/target
+    command: ["sh", "-c", "rm -rf /target/* && cp -r /assets/* /target/"]
+
 volumes:
   cherryops_data:
     external: true
     name: cherryops_data
+  cherryops_web:
+    external: true
+    name: cherryops_web
 
 networks:
   infra-net:

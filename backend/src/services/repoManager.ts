@@ -98,6 +98,35 @@ export class RepoManager {
     return data.commit.sha;
   }
 
+  async createBranch(
+    repo: string,
+    branchName: string,
+    fromBranch: string
+  ): Promise<void> {
+    const sha = await this.getBranchSha(repo, fromBranch);
+    await this.fetchJson(`${GITHUB_API}/repos/${repo}/git/refs`, {
+      method: "POST",
+      body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha }),
+    });
+  }
+
+  async createPullRequest(
+    repo: string,
+    head: string,
+    base: string,
+    title: string,
+    body: string
+  ): Promise<{ number: number; html_url: string }> {
+    const data = await this.fetchJson<{ number: number; html_url: string }>(
+      `${GITHUB_API}/repos/${repo}/pulls`,
+      {
+        method: "POST",
+        body: JSON.stringify({ title, body, head, base }),
+      }
+    );
+    return { number: data.number, html_url: data.html_url };
+  }
+
   private async fetchJson<T>(
     url: string,
     options?: RequestInit

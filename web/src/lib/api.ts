@@ -197,7 +197,7 @@ export const api = {
     request<TaskResultResponse>(`/api/v1/tasks/${taskId}/result`),
 
   approveTask: (taskId: string) =>
-    request<{ task_id: string; status: string }>(`/api/v1/tasks/${taskId}/approve`, {
+    request<{ task_id: string; status: string; pr_url?: string }>(`/api/v1/tasks/${taskId}/approve`, {
       method: "POST",
       body: JSON.stringify({ action: "approve" }),
     }),

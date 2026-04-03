@@ -3,7 +3,7 @@ import { useTasks } from "../hooks/useTasks";
 import { useFileContent } from "../hooks/useFileTree";
 import StatusBadge from "../components/ui/StatusBadge";
 import { api, type TaskStatus, type TaskRecord } from "../lib/api";
-import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff, ClipboardList, Bot, Circle, CheckCircle2, Code } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, Redo2, Trash2, Plus, Send, Wifi, WifiOff, ClipboardList, Bot, Circle, CheckCircle2, Code, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import DiffViewer from "../components/ui/DiffViewer";
 import { useTaskStream } from "../hooks/useTaskStream";
@@ -367,6 +367,7 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
   const [outputFormat, setOutputFormat] = useState<string | null>(null);
   const [redirectBrief, setRedirectBrief] = useState("");
   const [acting, setActing] = useState(false);
+  const [prUrl, setPrUrl] = useState<string | null>(null);
 
   const loadOutput = async () => {
     if (!expanded && (task.status === "complete" || task.status === "done")) {
@@ -382,8 +383,12 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
 
   const handleApprove = async () => {
     setActing(true);
-    await api.approveTask(task.id);
-    setActing(false);
+    try {
+      const res = await api.approveTask(task.id);
+      if (res.pr_url) setPrUrl(res.pr_url);
+    } finally {
+      setActing(false);
+    }
     onAction();
   };
 
@@ -441,10 +446,22 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
                 )
               )}
 
-              {task.status === "complete" && (
+              {prUrl && (
+                <a
+                  href={prUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-cherry-600/15 text-cherry-400 rounded-lg text-sm hover:bg-cherry-600/25 transition"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-4 h-4" /> View Pull Request
+                </a>
+              )}
+
+              {task.status === "complete" && !prUrl && (
                 <div className="flex items-center gap-3">
                   <button onClick={handleApprove} disabled={acting} className="flex items-center gap-1.5 px-3 py-1.5 bg-status-complete/15 text-status-complete rounded-lg text-sm hover:bg-status-complete/25 transition cursor-pointer disabled:opacity-50">
-                    <Check className="w-4 h-4" /> Approve
+                    <Check className="w-4 h-4" /> {acting ? "Creating PR..." : "Approve & Create PR"}
                   </button>
                   <div className="flex items-center gap-2">
                     <input

@@ -49,7 +49,7 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
       "/tasks/create",
       { onRequest: [app.authenticate] },
       async (request, reply) => {
-        const { repo, brief, skill_id, agent_mode: requestedMode } = request.body;
+        const { repo, brief, skill_id } = request.body;
         const branch = request.body.branch || "main";
 
         if (!repo || !brief) {
@@ -64,7 +64,9 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
 
         // If skill_id provided, look up skill and merge context files
         let enrichedBrief = brief;
-        let agentMode: import("../types.js").AgentMode = requestedMode || "api_direct";
+        // Force api_direct — cherry_agent requires a repo checkout inside the container
+        // which isn't available in the current Docker setup
+        let agentMode: import("../types.js").AgentMode = "api_direct";
         let outputFile: string | null = null;
 
         if (skill_id) {
@@ -85,6 +87,28 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
               }
               enrichedBrief += `\n\n---\n\nContext:\n${contextParts.join("\n\n---\n\n")}`;
             }
+          }
+        }
+
+        // Auto-enrich ad-hoc tasks with repo context (file tree + key files)
+        if (!skill_id) {
+          const contextParts: string[] = [];
+          try {
+            const tree = await repoManager.getFileTree(repo, branch);
+            const paths = tree.map((t) => `${t.type === "tree" ? "📁" : "  "} ${t.path}`);
+            contextParts.push(`## File tree\n\n\`\`\`\n${paths.join("\n")}\n\`\`\``);
+          } catch { /* skip */ }
+
+          const keyFiles = ["CLAUDE.md", "README.md", "package.json", ".claude/tasks.md"];
+          for (const kf of keyFiles) {
+            try {
+              const file = await repoManager.getFileContent(repo, kf, branch);
+              contextParts.push(`## ${kf}\n\n${file.content}`);
+            } catch { /* skip — file may not exist */ }
+          }
+
+          if (contextParts.length > 0) {
+            enrichedBrief += `\n\n---\n\nRepository: ${repo} (branch: ${branch})\n\n${contextParts.join("\n\n---\n\n")}`;
           }
         }
 

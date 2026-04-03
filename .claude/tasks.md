@@ -9,10 +9,6 @@
 (none — all P0 complete)
 
 ### P1 — Should do this week
-- [ ] Manual test: Android app build #chore 👤 manual
-- [ ] Manual test: VPS deployment pipeline #chore 👤 manual
-- [ ] Manual test: Backend API smoke tests #chore 👤 manual
-- [ ] Manual test: End-to-end task flow #chore 👤 manual
 
 ### P2 — Nice to have
 - [ ] Add Web Audio API voice capture to web dashboard #feature

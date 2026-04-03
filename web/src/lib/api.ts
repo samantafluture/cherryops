@@ -196,10 +196,10 @@ export const api = {
   taskResult: (taskId: string) =>
     request<TaskResultResponse>(`/api/v1/tasks/${taskId}/result`),
 
-  approveTask: (taskId: string) =>
+  approveTask: (taskId: string, targetPath?: string) =>
     request<{ task_id: string; status: string; pr_url?: string }>(`/api/v1/tasks/${taskId}/approve`, {
       method: "POST",
-      body: JSON.stringify({ action: "approve" }),
+      body: JSON.stringify({ action: "approve", ...(targetPath ? { target_path: targetPath } : {}) }),
     }),
 
   redirectTask: (taskId: string, newBrief: string) =>

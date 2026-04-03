@@ -25,6 +25,25 @@ import type {
 
 const MAX_CONCURRENT_PER_REPO = 2;
 
+// Detect target file path from output content (e.g., "# CLAUDE.md" → "CLAUDE.md")
+function detectTargetPath(content: string): string | null {
+  const firstLine = content.split("\n")[0]?.trim() ?? "";
+  // Match "# filename.ext" or "# path/to/file.ext"
+  const match = firstLine.match(/^#\s+(\S+\.\w+)$/);
+  if (match) return match[1]!;
+  return null;
+}
+
+// Strip "# FILENAME.md\n\n" header wrapper if present
+function stripOutputWrapper(content: string): string {
+  const lines = content.split("\n");
+  const firstLine = lines[0]?.trim() ?? "";
+  if (firstLine.match(/^#\s+\S+\.\w+$/) && (lines[1]?.trim() === "" || lines[1] === undefined)) {
+    return lines.slice(2).join("\n").trim() + "\n";
+  }
+  return content;
+}
+
 export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager) {
   return async function taskRoutes(app: FastifyInstance): Promise<void> {
     // List all tasks with optional filters
@@ -297,7 +316,8 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
             .send({ error: "Only completed tasks can be approved" });
         }
 
-        // Create branch, apply output as a meaningful file, open PR
+        // Create branch, apply output to target path, open PR
+        const targetPath = (request.body as unknown as Record<string, unknown>).target_path as string | undefined;
         let prUrl: string | null = null;
         if (task.output_file) {
           try {
@@ -311,14 +331,26 @@ export function createTaskRoutes(taskQueue: TaskQueue, repoManager: RepoManager)
               task.branch
             );
 
-            // Write a summary/apply file on the branch so the PR has a diff
-            const applyPath = `cherryops-output/${task.id.slice(0, 10)}.md`;
+            // Determine where to write: user-specified target, or detect from content
+            const applyPath = targetPath || detectTargetPath(outputContent.content) || task.output_file;
+
+            // Get existing file SHA if updating
+            let existingSha: string | undefined;
+            try {
+              const existing = await repoManager.getFileContent(task.repo, applyPath, branchName);
+              existingSha = existing.sha;
+            } catch { /* new file */ }
+
+            // Strip any markdown wrapper (# CLAUDE.md header etc) — write raw content
+            const rawContent = stripOutputWrapper(outputContent.content);
+
             await repoManager.createOrUpdateFile(
               task.repo,
               applyPath,
-              `# CherryOps Task Output\n\n**Task:** ${task.id}\n**Output file:** ${task.output_file}\n\n---\n\n${outputContent.content}`,
-              `[cherryops] Task ${task.id.slice(0, 10)} — approved output`,
-              branchName
+              rawContent,
+              `[cherryops] ${applyPath} — task ${task.id.slice(0, 10)}`,
+              branchName,
+              existingSha
             );
 
             // Create PR

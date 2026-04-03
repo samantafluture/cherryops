@@ -366,6 +366,7 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
   const [diff, setDiff] = useState<string | null>(null);
   const [outputFormat, setOutputFormat] = useState<string | null>(null);
   const [redirectBrief, setRedirectBrief] = useState("");
+  const [targetPath, setTargetPath] = useState("");
   const [acting, setActing] = useState(false);
   const [prUrl, setPrUrl] = useState<string | null>(null);
 
@@ -384,7 +385,7 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
   const handleApprove = async () => {
     setActing(true);
     try {
-      const res = await api.approveTask(task.id);
+      const res = await api.approveTask(task.id, targetPath.trim() || undefined);
       if (res.pr_url) setPrUrl(res.pr_url);
     } finally {
       setActing(false);
@@ -459,10 +460,19 @@ function TaskRow({ task, expanded, onToggle, onAction }: {
               )}
 
               {task.status === "complete" && !prUrl && (
-                <div className="flex items-center gap-3">
-                  <button onClick={handleApprove} disabled={acting} className="flex items-center gap-1.5 px-3 py-1.5 bg-status-complete/15 text-status-complete rounded-lg text-sm hover:bg-status-complete/25 transition cursor-pointer disabled:opacity-50">
-                    <Check className="w-4 h-4" /> {acting ? "Creating PR..." : "Approve & Create PR"}
-                  </button>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={targetPath}
+                      onChange={(e) => setTargetPath(e.target.value)}
+                      placeholder="Target file path (e.g., CLAUDE.md) — auto-detected if empty"
+                      className="flex-1 px-3 py-1.5 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-cherry-500"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <button onClick={handleApprove} disabled={acting} className="flex items-center gap-1.5 px-3 py-1.5 bg-status-complete/15 text-status-complete rounded-lg text-sm hover:bg-status-complete/25 transition cursor-pointer disabled:opacity-50 shrink-0">
+                      <Check className="w-4 h-4" /> {acting ? "Creating PR..." : "Approve & Create PR"}
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <input
                       value={redirectBrief}

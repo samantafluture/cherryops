@@ -12,6 +12,7 @@ git reset --hard origin/main
 
 echo "→ Building Docker images..."
 docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml build --no-cache web-assets
 
 echo "→ Deploying web assets..."
 docker compose -f docker-compose.prod.yml run --rm web-assets

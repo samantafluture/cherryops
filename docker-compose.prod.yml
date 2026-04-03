@@ -20,7 +20,7 @@ services:
     profiles: [tools]
     volumes:
       - cherryops_web:/target
-    command: ["sh", "-c", "rm -rf /target/* && cp -r /assets/* /target/"]
+    command: ["sh", "-c", "rm -rf /target/* 2>/dev/null; cp -r /assets/* /target/"]
 
 volumes:
   cherryops_data:

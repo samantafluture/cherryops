@@ -20,6 +20,8 @@ RUN npm ci --omit=dev
 
 FROM node:20-alpine
 
+RUN npm install -g @anthropic-ai/claude-code
+
 WORKDIR /app
 COPY --from=deps-prod /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist

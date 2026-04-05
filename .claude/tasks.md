@@ -11,6 +11,7 @@
 ### P1 — Should do this week
 
 - [ ] Implement "Sam's Brain" workspace `[L]` #feature
+  > Ref: `.claude/docs/sam-brain-workspace.md` — full implementation plan
   - [ ] Phase 1: Create root CLAUDE.md, .queue, brain/ repo, current-state.md
   - [ ] Phase 2: Populate brain/goals/, brain/library/, tracking.db schema
   - [ ] Phase 3: MCP morning_standup → current-state.md, /brain-sync, clone brain/ on VPS

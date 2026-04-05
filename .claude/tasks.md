@@ -1,7 +1,7 @@
 # Project: CherryOps
 
 > Last synced to repo: 2026-04-02T21:42:16.634Z
-> Last agent update: 2026-04-04
+> Last agent update: 2026-04-05
 
 ## Active Sprint
 
@@ -10,12 +10,13 @@
 
 ### P1 — Should do this week
 
-- [ ] Implement "Sam's Brain" workspace `[L]` #feature
+- [/] Implement "Sam's Brain" workspace `[L]` #feature ⏳ in-progress
   > Ref: `.claude/docs/sam-brain-workspace.md` — full implementation plan
-  - [ ] Phase 1: Create root CLAUDE.md, .queue, brain/ repo, current-state.md
-  - [ ] Phase 2: Populate brain/goals/, brain/library/, tracking.db schema
-  - [ ] Phase 3: MCP morning_standup → current-state.md, /brain-sync, clone brain/ on VPS
-  - [ ] Phase 4: Add MCP brain tools (brain_status, brain_update, brain_log_lesson, brain_log_energy, brain_query)
+  - [x] Phase 1: Create brain/ repo, CLAUDE.md, identity, principles, energy, goals, wiki structure, tracking.db ✅ 2026-04-05
+  - [x] Phase 2: Wire morning_standup → current-state.md, CherryAgent BRAIN_DIR, shallow/deep readBrainContext ✅ 2026-04-05
+  - [x] Phase 3: 12 MCP brain tools (8 core + 4 wiki/Karpathy), registered in vps-mcp-server ✅ 2026-04-05
+  - [x] Phase 4: Task completion → daily_log, blog deploy → daily_log, integrations wired ✅ 2026-04-05
+  - [ ] Deploy to VPS: clone brain/ repo, set BRAIN_DIR env vars, rebuild vps-mcp-server container
 
 - [x] Fix shipit_ci_status: gh CLI in vps-mcp-server container needs GitHub auth (GITHUB_TOKEN env var) `[S]` #devops ✅ 2026-04-04
 - [x] Register vps-mcp-server as a managed project in the MCP project registry `[S]` #devops ✅ 2026-04-05

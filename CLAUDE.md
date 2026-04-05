@@ -1,69 +1,38 @@
-# CherryOps — Claude Code Context
+# CherryOps
 
-## What this project is
-CherryOps is a command center for AI workflows.
-Android app + Web dashboard + backend API + skill packs (YAML).
-Monorepo. Open source (Apache 2.0). Commercial Cloud tier is in a separate private repo.
+Command center for AI workflows. Android app + Web dashboard + backend API + skill packs (YAML). Open source (Apache 2.0).
 
-## Repo structure
-- android/     — Kotlin + Jetpack Compose mobile app
-- web/         — React + TypeScript + Vite web dashboard
-- backend/     — cherryops-backend, Fastify + Node.js
-- skills/      — Starter skill YAML packs
-- docs/        — PRD, TDD (this file's neighbours)
+## Structure
 
-## Key docs to read before making changes
-- docs/cherryops-prd.md    — product requirements and vision
-- docs/cherryops-tdd.md    — technical design, API contracts, data models
+```
+android/        # Kotlin + Jetpack Compose mobile app (MVVM, Hilt, Keystore)
+web/            # React + TypeScript + Vite + Tailwind 4 + TanStack Query v5
+backend/        # Fastify + TypeScript + SQLite (better-sqlite3), port 3100
+skills/         # Starter skill YAML packs (schema v1)
+docs/
+  cherryops-prd.md   # Product requirements — read before features
+  cherryops-tdd.md   # Technical design, API contracts, data models, skill schema
+```
 
-## Backend
-- Port 3100 (not 3000 — that's CherryAgent, a separate personal tool)
-- Fastify + TypeScript + SQLite (better-sqlite3)
-- Never touch or import from CherryAgent
+## Commands
 
-## Android
-- MVVM + Clean Architecture
-- Hilt for DI
-- Jetpack Compose navigation
-- Android Keystore for all sensitive storage (never SharedPreferences unencrypted)
+```bash
+# Backend
+cd backend && pnpm dev          # API on :3100
 
-## Web Dashboard
-- Vite + React 18 + TypeScript + Tailwind CSS 4
-- React Router v7 + TanStack React Query v5
-- Same REST API as Android app — both are equal clients
-- Dev: `cd web && npm run dev` (proxies /api to localhost:3100)
-- Admin token login — token logged on backend startup
+# Web
+cd web && npm run dev           # Dashboard on :5173 (proxies /api to :3100)
 
-## Skill YAML schema
-- Defined in docs/cherryops-tdd.md §4
-- Schema version "1" — do not change field names
-- All new skills must pass /skills/validate before being surfaced in the UI
+# Android
+./gradlew assembleDebug         # Build Android app
+```
 
-## Task file format
-- Defined in docs/cherryops-tdd.md §5
-- ULID IDs only
-- pending/, outputs/, done/ are managed by the backend — never edited manually
+## Key Rules
 
-## Things to never do
-- Add features to backend/ that belong in cherry-ops-cloud (Cloud infra stays private)
-- Store API keys anywhere except Android Keystore or backend .env
-- Change the skill YAML schema without bumping schema_version
-- Import or call CherryAgent from any cherryops-backend code
-
-## Task Management
-
-- Tasks are tracked in `.claude/tasks.md` in this repo
-- Before starting work, read `.claude/tasks.md` to understand priorities
-- After completing a task, mark it `[x]` with a completion date and today's date
-- When a task is complex, break it into subtasks (indented 2 spaces)
-- Add a blockquote note when you create or modify tasks: `> Agent: <what you did>`
-- Move completed tasks to "Completed (recent)" section
-- Never delete tasks — only move them to Completed or archive
-- Respect priority order: finish all P0 before starting P1
-- If blocked, move task to "Blocked" section with blocked marker and reason
-- When starting a task, mark it as in-progress
-
-### Private context
-- Private project notes are in `.claude/private/` (secrets, infra, strategy)
-- Read `.claude/private/` for context on credentials, infrastructure, strategic decisions
-- NEVER include contents of `.claude/private/` in commit messages, PRs, or public output
+- Backend port is 3100 (not 3000 — that's CherryAgent)
+- Never import from or reference CherryAgent
+- Android uses Keystore for all sensitive storage (never unencrypted SharedPreferences)
+- Web and Android are equal REST API clients
+- Skill YAML schema defined in TDD section 4 — don't change field names without bumping `schema_version`
+- All skills must pass `/skills/validate` before being surfaced in UI
+- Cloud tier features stay in the separate private repo — don't add them to backend/

@@ -10,7 +10,7 @@
 
 ### P1 — Should do this week
 
-- [ ] Fix shipit_ci_status: gh CLI in vps-mcp-server container needs GitHub auth (GITHUB_TOKEN env var) `[S]` #devops
+- [x] Fix shipit_ci_status: gh CLI in vps-mcp-server container needs GitHub auth (GITHUB_TOKEN env var) `[S]` #devops ✅ 2026-04-04
 - [ ] Register vps-mcp-server as a managed project in the MCP project registry `[S]` #devops
 ### P2 — Nice to have
 - [ ] Add Web Audio API voice capture to web dashboard #feature

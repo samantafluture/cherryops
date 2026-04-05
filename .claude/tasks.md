@@ -10,6 +10,12 @@
 
 ### P1 — Should do this week
 
+- [ ] Implement "Sam's Brain" workspace `[L]` #feature
+  - [ ] Phase 1: Create root CLAUDE.md, .queue, brain/ repo, current-state.md
+  - [ ] Phase 2: Populate brain/goals/, brain/library/, tracking.db schema
+  - [ ] Phase 3: MCP morning_standup → current-state.md, /brain-sync, clone brain/ on VPS
+  - [ ] Phase 4: Add MCP brain tools (brain_status, brain_update, brain_log_lesson, brain_log_energy, brain_query)
+
 - [x] Fix shipit_ci_status: gh CLI in vps-mcp-server container needs GitHub auth (GITHUB_TOKEN env var) `[S]` #devops ✅ 2026-04-04
 - [x] Register vps-mcp-server as a managed project in the MCP project registry `[S]` #devops ✅ 2026-04-05
 ### P2 — Nice to have
